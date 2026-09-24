@@ -34,3 +34,4 @@ describe('OrderItem Entity', () => {
     expect(result.getError().message).toContain('수량은 1개 이상');
   });
 });
+

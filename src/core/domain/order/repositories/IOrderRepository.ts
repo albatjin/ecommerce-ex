@@ -16,3 +16,4 @@ export interface IOrderRepository {
   save(order: Order): Promise<void>;
   nextOrderNumber(): Promise<OrderNumber>;
 }
+

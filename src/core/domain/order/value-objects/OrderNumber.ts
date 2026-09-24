@@ -43,3 +43,4 @@ export class OrderNumber extends ValueObject<OrderNumberProps> {
     return new OrderNumber({ value: `ORD-${dateStr}-${randomHex}` });
   }
 }
+

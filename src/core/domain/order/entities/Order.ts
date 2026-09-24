@@ -263,3 +263,4 @@ export class Order extends Entity<OrderProps> {
     return ok(order);
   }
 }
+

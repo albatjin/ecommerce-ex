@@ -59,3 +59,4 @@ describe('ShippingAddress Value Object', () => {
     expect(addr1.equals(addr2)).toBe(true);
   });
 });
+

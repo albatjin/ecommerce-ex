@@ -5,3 +5,4 @@ export * from './MemoryCartRepository';
 export * from './CookieCartRepository';
 export * from './SupabaseCouponRepository';
 export * from './SupabasePointRepository';
+export * from './SupabaseOrderRepository';

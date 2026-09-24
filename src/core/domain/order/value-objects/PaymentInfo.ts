@@ -72,3 +72,4 @@ export class PaymentInfo extends ValueObject<PaymentInfoProps> {
     });
   }
 }
+
