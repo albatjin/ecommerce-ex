@@ -41,3 +41,4 @@ export interface GetProductsResultDTO {
   hasPrevPage: boolean;
   hasNextPage: boolean;
 }
+
