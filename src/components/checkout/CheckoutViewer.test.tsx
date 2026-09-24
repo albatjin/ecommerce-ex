@@ -11,6 +11,11 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+const mockCreateOrderAction = vi.fn();
+vi.mock('@/app/actions/order.actions', () => ({
+  createOrderAction: (...args: any[]) => mockCreateOrderAction(...args),
+}));
+
 describe('CheckoutViewer Component', () => {
   const sampleData: CheckoutDataDTO = {
     items: [
@@ -138,4 +143,23 @@ describe('CheckoutViewer Component', () => {
       );
     });
   });
+
+  it('onPlaceOrder가 없으면 createOrderAction을 직접 호출하여 주문을 처리한다', async () => {
+    mockCreateOrderAction.mockResolvedValue({
+      success: true,
+      data: { orderId: 'ord-101', orderNumber: 'ORD-20260924-00099' },
+    });
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
+
+    render(<CheckoutViewer initialData={sampleData} />);
+
+    const submitBtn = screen.getByRole('button', { name: /결제하기/ });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(mockCreateOrderAction).toHaveBeenCalledTimes(1);
+      expect(mockPush).toHaveBeenCalledWith('/');
+    });
+  });
 });
+

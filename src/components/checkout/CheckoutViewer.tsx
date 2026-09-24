@@ -21,6 +21,7 @@ import type {
   CheckoutDataDTO,
   CheckoutShippingInput,
 } from '@/core/application/order/dtos/CheckoutDTO';
+import { createOrderAction } from '@/app/actions/order.actions';
 
 interface CheckoutViewerProps {
   initialData: CheckoutDataDTO;
@@ -160,9 +161,25 @@ export function CheckoutViewer({
           pointsToUse: appliedPoints,
         });
       } else {
-        // 모의 주문 완료 처리
-        await new Promise((r) => setTimeout(r, 600));
-        alert('주문이 안전하게 접수되었습니다!');
+        const res = await createOrderAction({
+          shippingAddress: {
+            recipientName: recipientName.trim(),
+            recipientPhone: recipientPhone.trim(),
+            zipcode: zipcode.trim(),
+            address: address.trim(),
+            message: finalMessage,
+          },
+          paymentMethod: selectedPaymentMethod,
+          couponId: selectedCouponId || null,
+          pointsToUse: appliedPoints,
+        });
+
+        if (!res.success) {
+          setErrorMessage(res.error || '주문 처리 중 오류가 발생했습니다.');
+          return;
+        }
+
+        alert(`주문이 안전하게 접수되었습니다! (주문번호: ${res.data?.orderNumber})`);
         router.push('/');
       }
     } catch (err) {
