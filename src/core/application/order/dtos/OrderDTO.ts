@@ -24,6 +24,7 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   TOSS_PAY: '토스페이',
   VIRTUAL_ACCOUNT: '가상계좌',
   MOBILE: '휴대폰 결제',
+  PAYPAL: 'PayPal (페이팔)',
 };
 
 export interface OrderItemDetailDTO {

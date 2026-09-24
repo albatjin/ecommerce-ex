@@ -56,6 +56,7 @@ export class MockPaymentGateway implements IPaymentGateway {
       TOSS_PAY: '토스머니',
       VIRTUAL_ACCOUNT: '가상계좌 (KB국민은행)',
       MOBILE: 'SKT 소액결제',
+      PAYPAL: 'PayPal Express Checkout (글로벌 간편결제)',
     };
 
     return ok({

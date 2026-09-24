@@ -96,6 +96,20 @@ describe('CheckoutViewer Component', () => {
     });
   });
 
+  it('PayPal 결제 수단을 선택하면 PayPal 전용 결제 버튼과 환율 계산 금액이 표시된다', async () => {
+    render(<CheckoutViewer initialData={sampleData} />);
+
+    const paypalBtn = screen.getByText('PayPal (페이팔)');
+    fireEvent.click(paypalBtn);
+
+    // 150,000원 / 1,400 = 약 $107.14 USD
+    await waitFor(() => {
+      expect(screen.getByText(/Pay with/i)).toBeInTheDocument();
+      expect(screen.getByText(/PayPal 글로벌 간편결제/)).toBeInTheDocument();
+      expect(screen.getAllByText(/\$107.14 USD/).length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
   it('필수 배송지 정보가 누락되면 에러 메시지를 표시하고 주문 제출을 중단한다', async () => {
     const onPlaceOrderMock = vi.fn();
     render(

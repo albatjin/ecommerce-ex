@@ -32,7 +32,8 @@ export type PaymentMethod =
   | 'KAKAO_PAY'
   | 'TOSS_PAY'
   | 'VIRTUAL_ACCOUNT'
-  | 'MOBILE';
+  | 'MOBILE'
+  | 'PAYPAL';
 
 export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
 

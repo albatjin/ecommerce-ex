@@ -242,6 +242,18 @@ export function OrderSuccessViewer({ order }: OrderSuccessViewerProps) {
                   </span>
                 </div>
               )}
+              {order.payment.method === 'PAYPAL' && (
+                <div className="flex justify-between text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                  <span className="text-slate-400">PayPal 주문번호</span>
+                  <span className="font-mono font-bold text-[#003087] dark:text-[#0079C1] text-[11px]">
+                    {String(
+                      (order.payment.details as Record<string, unknown>)?.paypalOrderId ||
+                        (order.payment.details as Record<string, unknown>)?.orderId ||
+                        'PAYID-VERIFIED'
+                    )}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2 text-xs text-slate-400 pt-1">

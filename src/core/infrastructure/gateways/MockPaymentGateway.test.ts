@@ -55,5 +55,16 @@ describe('MockPaymentGateway', () => {
     expect(result.isSuccess).toBe(true);
     expect(result.getValue().rawDetails.issuer).toBe('네이버페이 포인트/머니');
   });
+
+  it('PAYPAL 글로벌 결제 수단도 올바른 issuer 정보로 승인된다', async () => {
+    const gateway = new MockPaymentGateway();
+    const result = await gateway.requestPayment({
+      ...defaultParams,
+      paymentMethod: 'PAYPAL',
+    });
+
+    expect(result.isSuccess).toBe(true);
+    expect(result.getValue().rawDetails.issuer).toContain('PayPal Express Checkout');
+  });
 });
 

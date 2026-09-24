@@ -4,7 +4,7 @@ import { OrderNumber } from '@/core/domain/order/value-objects/OrderNumber';
 import { ShippingAddress } from '@/core/domain/order/value-objects/ShippingAddress';
 import { PaymentInfo } from '@/core/domain/order/value-objects/PaymentInfo';
 import { Money } from '@/core/domain/catalog/value-objects/Money';
-import type { Database } from '@/shared/types/database.types';
+import type { Database, PaymentMethod } from '@/shared/types/database.types';
 
 type OrderRow = Database['public']['Tables']['orders']['Row'];
 type OrderInsert = Database['public']['Tables']['orders']['Insert'];
@@ -32,10 +32,16 @@ export class OrderMapper {
       throw new Error(`배송지 매핑 실패: ${shippingAddressResult.getError().message}`);
     }
 
+    const paymentDetails = (orderRow.payment_details as Record<string, unknown>) ?? null;
+    const paymentMethod: PaymentMethod =
+      paymentDetails?.provider === 'PAYPAL' || paymentDetails?.method === 'PAYPAL' || orderRow.payment_method === 'PAYPAL'
+        ? 'PAYPAL'
+        : orderRow.payment_method;
+
     const paymentInfoResult = PaymentInfo.create({
-      method: orderRow.payment_method,
+      method: paymentMethod,
       status: orderRow.payment_status,
-      details: (orderRow.payment_details as Record<string, unknown>) ?? null,
+      details: paymentDetails,
       paidAt: orderRow.paid_at ? new Date(orderRow.paid_at) : null,
     });
     if (paymentInfoResult.isFailure) {
@@ -118,11 +124,15 @@ export class OrderMapper {
       point_used: order.pointUsed.amount,
       shipping_fee: order.shippingFee.amount,
       total_paid_amount: order.totalPaidAmount.amount,
-      payment_method: order.paymentInfo.method,
+      payment_method:
+        order.paymentInfo.method === 'PAYPAL' ? 'CREDIT_CARD' : order.paymentInfo.method,
       payment_status: order.paymentInfo.status,
       payment_details: ((order.paymentInfo.details && Object.keys(order.paymentInfo.details).length > 0)
-        ? (order.paymentInfo.details as unknown as Database['public']['Tables']['orders']['Insert']['payment_details'])
-        : ({} as unknown as Database['public']['Tables']['orders']['Insert']['payment_details'])),
+        ? ({
+            ...(order.paymentInfo.details as Record<string, unknown>),
+            ...(order.paymentInfo.method === 'PAYPAL' ? { provider: 'PAYPAL', method: 'PAYPAL' } : {}),
+          } as unknown as Database['public']['Tables']['orders']['Insert']['payment_details'])
+        : ((order.paymentInfo.method === 'PAYPAL' ? { provider: 'PAYPAL', method: 'PAYPAL' } : {}) as unknown as Database['public']['Tables']['orders']['Insert']['payment_details'])),
       recipient_name: order.shippingAddress.recipientName,
       recipient_phone: order.shippingAddress.recipientPhone,
       shipping_address: order.shippingAddress.address,

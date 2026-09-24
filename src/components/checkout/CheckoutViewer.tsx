@@ -15,6 +15,7 @@ import {
   AlertCircle,
   Building,
   Smartphone,
+  Globe,
 } from 'lucide-react';
 import type { PaymentMethod } from '@/shared/types/database.types';
 import type {
@@ -24,6 +25,10 @@ import type {
 import { createOrderAction, approvePaymentAction } from '@/app/actions/order.actions';
 import { useCart } from '@/components/cart/CartContext';
 import { CheckoutStepIndicator } from '../common';
+import {
+  PayPalCheckoutModal,
+  type PayPalApprovalDetails,
+} from './PayPalCheckoutModal';
 
 interface CheckoutViewerProps {
   initialData: CheckoutDataDTO;
@@ -78,6 +83,7 @@ export function CheckoutViewer({
   // 4. UI 접기/펼치기 상태
   const [isItemListOpen, setIsItemListOpen] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPayPalModalOpen, setIsPayPalModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // 선택된 쿠폰 정보 및 할인액 계산
@@ -109,6 +115,18 @@ export function CheckoutViewer({
     Math.max(0, initialData.productTotal - totalDiscount) * 0.01
   );
 
+  // PayPal 환산 금액 (1 USD = 1,400 KRW)
+  const amountUSD = Number((finalPaymentAmount / 1400).toFixed(2));
+
+  // 주문명 (대표 상품명 외 N건)
+  const orderTitle = useMemo(() => {
+    if (!initialData.items || initialData.items.length === 0) return '주문 상품';
+    const firstItemTitle = initialData.items[0].productName;
+    return initialData.items.length > 1
+      ? `${firstItemTitle} 외 ${initialData.items.length - 1}건`
+      : firstItemTitle;
+  }, [initialData.items]);
+
   // 적립금 전액 사용 버튼 핸들러
   const handleUseAllPoints = () => {
     setPointsInput(maxPointsAvailable);
@@ -120,6 +138,87 @@ export function CheckoutViewer({
       setPointsInput(maxPointsAvailable);
     } else {
       setPointsInput(num);
+    }
+  };
+
+  // PayPal 결제 승인 콜백 핸들러
+  const handlePayPalApprove = async (details: PayPalApprovalDetails) => {
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    try {
+      const finalMessage =
+        selectedMessage === '직접 입력'
+          ? customMessage.trim()
+          : selectedMessage === SHIPPING_MESSAGES[0]
+          ? ''
+          : selectedMessage;
+
+      const res = await createOrderAction({
+        shippingAddress: {
+          recipientName: recipientName.trim(),
+          recipientPhone: recipientPhone.trim(),
+          zipcode: zipcode.trim(),
+          address: address.trim(),
+          message: finalMessage,
+        },
+        paymentMethod: 'PAYPAL',
+        couponId: selectedCouponId || null,
+        pointsToUse: appliedPoints,
+      });
+
+      if (!res.success || !res.data) {
+        setErrorMessage(res.error || 'PayPal 주문 처리 중 오류가 발생했습니다.');
+        setIsPayPalModalOpen(false);
+        return;
+      }
+
+      const approveRes = await approvePaymentAction(res.data.orderId, {
+        provider: 'PAYPAL',
+        method: 'PAYPAL',
+        paypalOrderId: details.orderId,
+        payerId: details.payerId,
+        payerEmail: details.payerEmail,
+        payerName: details.payerName,
+        usdAmount: details.usdAmount,
+        exchangeRate: details.exchangeRate,
+        approvedAt: details.approvedAt,
+      });
+
+      if (!approveRes.success) {
+        setErrorMessage(
+          approveRes.error || 'PayPal 결제 승인 처리 중 오류가 발생했습니다.'
+        );
+        setIsPayPalModalOpen(false);
+        return;
+      }
+
+      try {
+        await refreshCart();
+      } catch {
+        // 장바구니 갱신 오류 방어
+      }
+
+      setIsPayPalModalOpen(false);
+      const orderNumber = approveRes.data?.orderNumber || res.data.orderNumber;
+      const targetUrl = `/checkout/success?orderNumber=${encodeURIComponent(
+        orderNumber
+      )}`;
+      router.push(targetUrl);
+      if (typeof window !== 'undefined') {
+        setTimeout(() => {
+          if (window.location.pathname !== '/checkout/success') {
+            window.location.href = targetUrl;
+          }
+        }, 300);
+      }
+    } catch (err) {
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : 'PayPal 결제 처리 중 오류가 발생했습니다.'
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -147,6 +246,11 @@ export function CheckoutViewer({
         : selectedMessage === SHIPPING_MESSAGES[0]
         ? ''
         : selectedMessage;
+
+    if (selectedPaymentMethod === 'PAYPAL' && !onPlaceOrder) {
+      setIsPayPalModalOpen(true);
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -539,6 +643,7 @@ export function CheckoutViewer({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
                 { id: 'CREDIT_CARD', label: '신용/체크카드', icon: CreditCard },
+                { id: 'PAYPAL', label: 'PayPal (페이팔)', icon: Globe },
                 { id: 'NAVER_PAY', label: '네이버페이', icon: Sparkles },
                 { id: 'KAKAO_PAY', label: '카카오페이', icon: Sparkles },
                 { id: 'TOSS_PAY', label: '토스페이', icon: Sparkles },
@@ -571,6 +676,35 @@ export function CheckoutViewer({
                 );
               })}
             </div>
+
+            {/* PayPal 결제 선택 시 안내 카드 */}
+            {selectedPaymentMethod === 'PAYPAL' && (
+              <div className="p-4 rounded-2xl bg-[#003087]/5 dark:bg-[#003087]/20 border border-[#003087]/20 flex items-center justify-between animate-in fade-in duration-150">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#003087] text-white flex items-center justify-center font-black text-sm italic shadow-xs">
+                    <span className="text-[#0079C1]">P</span>
+                    <span className="-ml-1 text-white">P</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-[#003087] dark:text-[#0079C1]">
+                        PayPal 글로벌 간편결제
+                      </span>
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-100 dark:bg-amber-950/60 dark:text-amber-400 px-2 py-0.5 rounded-full">
+                        USD 결제
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      약 ${amountUSD.toFixed(2)} USD (기준환율 ₩1,400/$ 적용)
+                    </p>
+                  </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Buyer Protection</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -648,18 +782,43 @@ export function CheckoutViewer({
             </div>
 
             {/* 주문 및 결제 버튼 */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-            >
-              <CreditCard className="w-5 h-5" />
-              <span>
-                {isSubmitting
-                  ? '결제 승인 중...'
-                  : `${finalPaymentAmount.toLocaleString()}원 결제하기`}
-              </span>
-            </button>
+            {selectedPaymentMethod === 'PAYPAL' ? (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-4 px-6 rounded-2xl bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-black text-sm sm:text-base shadow-lg shadow-amber-500/20 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-[#003087]/30 border-t-[#003087] rounded-full animate-spin" />
+                    <span>PayPal 결제 진행 중...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-extrabold text-[#003087]">Pay with</span>
+                    <span className="font-black italic text-[#003087] tracking-tight text-lg">
+                      PayPal
+                    </span>
+                    <span className="text-xs font-bold text-slate-800">
+                      (${amountUSD.toFixed(2)} USD)
+                    </span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <CreditCard className="w-5 h-5" />
+                <span>
+                  {isSubmitting
+                    ? '결제 승인 중...'
+                    : `${finalPaymentAmount.toLocaleString()}원 결제하기`}
+                </span>
+              </button>
+            )}
 
             {/* 보안 및 이용약관 배지 */}
             <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500">
@@ -675,6 +834,17 @@ export function CheckoutViewer({
           </div>
         </div>
       </form>
+
+      {/* PayPal 결제 승인 모달 */}
+      <PayPalCheckoutModal
+        isOpen={isPayPalModalOpen}
+        onClose={() => setIsPayPalModalOpen(false)}
+        onApprove={handlePayPalApprove}
+        amountKRW={finalPaymentAmount}
+        recipientName={recipientName}
+        recipientAddress={`${address} ${zipcode ? `(${zipcode})` : ''}`}
+        orderName={orderTitle}
+      />
     </div>
   );
 }
