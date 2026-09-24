@@ -121,3 +121,4 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
     </div>
   );
 }
+

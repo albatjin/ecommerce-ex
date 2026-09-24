@@ -64,3 +64,4 @@ describe('FilterSidebar', () => {
     expect(pushMock).toHaveBeenCalledWith('/products?hasDiscount=true');
   });
 });
+

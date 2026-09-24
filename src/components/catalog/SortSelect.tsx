@@ -43,3 +43,4 @@ export function SortSelect({ currentSort = 'created_at' }: SortSelectProps) {
     </div>
   );
 }
+

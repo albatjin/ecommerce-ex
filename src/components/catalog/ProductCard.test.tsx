@@ -59,3 +59,4 @@ describe('ProductCard', () => {
     expect(handleAddToCart).toHaveBeenCalledWith('prod-1');
   });
 });
+

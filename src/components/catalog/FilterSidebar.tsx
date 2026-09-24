@@ -208,3 +208,4 @@ export function FilterSidebar({ categories = [], className = '' }: FilterSidebar
     </aside>
   );
 }
+

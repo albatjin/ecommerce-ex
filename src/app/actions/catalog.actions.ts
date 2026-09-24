@@ -4,11 +4,13 @@ import { SupabaseCategoryRepository } from '@/core/infrastructure/repositories/S
 import { SupabaseProductRepository } from '@/core/infrastructure/repositories/SupabaseProductRepository';
 import { GetCategoryTreeUseCase } from '@/core/application/catalog/use-cases/GetCategoryTreeUseCase';
 import { GetProductsUseCase } from '@/core/application/catalog/use-cases/GetProductsUseCase';
+import { GetProductDetailUseCase } from '@/core/application/catalog/use-cases/GetProductDetailUseCase';
 import type { CategoryTreeNode } from '@/core/application/catalog/dtos/CategoryTreeDTO';
 import type {
   GetProductsQueryDTO,
   GetProductsResultDTO,
 } from '@/core/application/catalog/dtos/GetProductsDTO';
+import type { ProductDetailDTO } from '@/core/application/catalog/dtos/ProductDetailDTO';
 
 export interface GetCategoryTreeActionResult {
   success: boolean;
@@ -20,6 +22,13 @@ export interface GetProductsActionResult {
   success: boolean;
   data?: GetProductsResultDTO;
   error?: string;
+}
+
+export interface GetProductDetailActionResult {
+  success: boolean;
+  data?: ProductDetailDTO;
+  error?: string;
+  statusCode?: number;
 }
 
 /**
@@ -65,6 +74,37 @@ export async function getProductsAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : '상품 목록을 불러오지 못했습니다.',
+    };
+  }
+}
+
+/**
+ * 상품 상세 정보 및 SKU 옵션 조회 Server Action
+ */
+export async function getProductDetailAction(
+  id: string
+): Promise<GetProductDetailActionResult> {
+  try {
+    const productRepository = new SupabaseProductRepository();
+    const categoryRepository = new SupabaseCategoryRepository();
+    const useCase = new GetProductDetailUseCase(productRepository, categoryRepository);
+    const result = await useCase.execute(id);
+
+    if (result.isFailure) {
+      const error = result.getError();
+      return {
+        success: false,
+        error: error.message,
+        statusCode: 'statusCode' in error ? (error as { statusCode: number }).statusCode : 500,
+      };
+    }
+
+    return { success: true, data: result.getValue() };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '상품 상세 정보를 불러오지 못했습니다.',
+      statusCode: 500,
     };
   }
 }

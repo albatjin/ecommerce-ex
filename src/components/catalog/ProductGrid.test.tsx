@@ -71,3 +71,4 @@ describe('ProductGrid', () => {
     expect(screen.getByText('전체 상품 보기')).toBeInTheDocument();
   });
 });
+
