@@ -119,3 +119,4 @@ describe('CartDrawer Component', () => {
     expect(screen.getByText('쇼핑 계속하기')).toBeInTheDocument();
   });
 });
+

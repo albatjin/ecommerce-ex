@@ -16,3 +16,4 @@ describe('FreeShippingGauge Component', () => {
     expect(screen.getByText(/무료배송 달성!/)).toBeInTheDocument();
   });
 });
+
