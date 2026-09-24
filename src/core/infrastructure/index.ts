@@ -1,3 +1,2 @@
 // Clean Architecture: Infrastructure Layer Entry
-export {};
-
+export * from './supabase';
