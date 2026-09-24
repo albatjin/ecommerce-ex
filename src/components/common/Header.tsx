@@ -34,9 +34,20 @@ export function Header({
           </p>
           <div className="flex items-center gap-3.5 text-slate-400 text-[11px]">
             {isAdmin && (
-              <Link href="/admin" className="text-amber-400 hover:text-amber-300 font-semibold">
-                관리자 콘솔
-              </Link>
+              <>
+                <Link href="/admin" className="text-amber-400 hover:text-amber-300 font-semibold">
+                  관리자 콘솔
+                </Link>
+                <span className="text-slate-700">|</span>
+                <Link href="/admin/claims" className="text-amber-400/80 hover:text-amber-300">
+                  클레임관리
+                </Link>
+                <span className="text-slate-700">|</span>
+                <Link href="/admin/inquiries" className="text-amber-400/80 hover:text-amber-300">
+                  문의관리
+                </Link>
+                <span className="text-slate-700">|</span>
+              </>
             )}
 
             {userName ? (
@@ -68,12 +79,20 @@ export function Header({
             )}
 
             <span className="text-slate-700">|</span>
-            <Link href="/support" className="hover:text-white transition-colors">
-              고객센터
+            <Link href="/my-page/orders" className="hover:text-white transition-colors">
+              주문/배송
             </Link>
             <span className="text-slate-700">|</span>
-            <Link href="/my-page/orders" className="hover:text-white transition-colors">
-              배송조회
+            <Link href="/my-page/claims" className="hover:text-white transition-colors">
+              취소/반품
+            </Link>
+            <span className="text-slate-700">|</span>
+            <Link href="/my-page/inquiries" className="hover:text-white transition-colors">
+              1:1 문의
+            </Link>
+            <span className="text-slate-700">|</span>
+            <Link href="/support" className="hover:text-white transition-colors">
+              고객센터
             </Link>
           </div>
         </div>
@@ -246,6 +265,58 @@ export function Header({
             >
               특가세일
             </Link>
+          </div>
+
+          <div className="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              마이페이지 & 고객지원
+            </p>
+            <Link
+              href="/my-page"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              마이페이지
+            </Link>
+            <Link
+              href="/my-page/orders"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              주문 / 배송 조회
+            </Link>
+            <Link
+              href="/my-page/claims"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+            >
+              취소 / 반품 내역
+            </Link>
+            <Link
+              href="/my-page/inquiries"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
+            >
+              1:1 고객 문의
+            </Link>
+            {isAdmin && (
+              <>
+                <Link
+                  href="/admin/claims"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-lg text-sm font-bold text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                >
+                  [관리자] 클레임 관리
+                </Link>
+                <Link
+                  href="/admin/inquiries"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-lg text-sm font-bold text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                >
+                  [관리자] 1:1 문의 관리
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

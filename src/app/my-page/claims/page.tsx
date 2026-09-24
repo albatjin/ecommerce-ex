@@ -7,42 +7,32 @@ import {
   Ticket,
   PackageCheck,
   ChevronRight,
-  Award,
   RotateCcw,
   MessageSquare,
-  ShieldCheck,
-  Package,
-  Settings,
 } from 'lucide-react';
 import { SupabaseUserRepository } from '@/core/infrastructure/repositories/SupabaseUserRepository';
 import { GetCurrentUserUseCase } from '@/core/application/auth';
 import { getUserOrdersAction } from '@/app/actions/order.actions';
-import { ProfileForm, OrderListViewer } from '@/components/user';
+import { OrderListViewer } from '@/components/user';
 
 export const metadata: Metadata = {
-  title: '마이페이지 | CommerceHub',
-  description: '회원 등급, 적립금, 쿠폰 및 주문 배송 현황, 취소/반품을 관리하세요.',
+  title: '취소 및 반품 내역 | 마이페이지 | CommerceHub',
+  description: '주문 취소 및 반품/환불 처리 상태를 확인하세요.',
 };
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-interface MyPageProps {
-  searchParams: Promise<{ tab?: string }>;
-}
-
-export default async function MyPage({ searchParams }: MyPageProps) {
+export default async function MyClaimsPage() {
   const userRepository = new SupabaseUserRepository();
   const getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository);
   const user = await getCurrentUserUseCase.execute();
 
   if (!user) {
-    redirect('/login?redirect=%2Fmy-page');
+    redirect('/login?redirect=%2Fmy-page%2Fclaims');
   }
 
-  const { tab = 'orders' } = await searchParams;
-
-  const ordersResult = await getUserOrdersAction({ limit: 20 });
+  const ordersResult = await getUserOrdersAction({ limit: 50 });
   const orders = ordersResult.success && ordersResult.data ? ordersResult.data.orders : [];
   const totalCount = ordersResult.success && ordersResult.data ? ordersResult.data.totalCount : 0;
 
@@ -56,11 +46,11 @@ export default async function MyPage({ searchParams }: MyPageProps) {
 
   return (
     <div className="container-custom py-8 sm:py-12 space-y-8">
-      {/* 1. 상단 회원 환영 & 등급 요약 카드 */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+      {/* 1. 상단 회원 요약 카드 */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-blue-600/30 border border-blue-500/30 flex items-center justify-center text-blue-400">
-            <UserCircle className="w-10 h-10" />
+          <div className="w-16 h-16 rounded-2xl bg-rose-600/30 border border-rose-500/30 flex items-center justify-center text-rose-400">
+            <RotateCcw className="w-10 h-10" />
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -110,45 +100,37 @@ export default async function MyPage({ searchParams }: MyPageProps) {
         </div>
       </div>
 
-      {/* 2. 마이페이지 사이드바 & 메인 콘텐츠 */}
+      {/* 2. 탭 내비게이션 & 메인 클레임 목록 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* 마이페이지 사이드바 메뉴 */}
         <div className="space-y-4">
           <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-1">
             <Link
-              href="/my-page?tab=orders"
-              className={`flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-sm transition-colors ${
-                tab === 'orders'
-                  ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium'
-              }`}
+              href="/my-page"
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium text-sm transition-colors"
             >
-              <span>주문 / 취소 / 반품</span>
-              <ChevronRight className="w-4 h-4" />
+              <span>회원정보 수정</span>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </Link>
+            <Link
+              href="/my-page/orders"
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium text-sm transition-colors"
+            >
+              <span>주문 / 배송 조회</span>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
             </Link>
             <Link
               href="/my-page/claims"
-              className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium text-sm transition-colors"
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-semibold text-sm"
             >
               <span>취소 / 반품 내역</span>
-              <ChevronRight className="w-4 h-4 text-slate-400" />
+              <ChevronRight className="w-4 h-4" />
             </Link>
             <Link
               href="/my-page/inquiries"
               className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium text-sm transition-colors"
             >
               <span>1:1 고객 문의</span>
-              <ChevronRight className="w-4 h-4 text-slate-400" />
-            </Link>
-            <Link
-              href="/my-page?tab=profile"
-              className={`flex items-center justify-between px-3 py-2.5 rounded-xl font-semibold text-sm transition-colors ${
-                tab === 'profile'
-                  ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium'
-              }`}
-            >
-              <span>회원정보 수정</span>
               <ChevronRight className="w-4 h-4 text-slate-400" />
             </Link>
             <Link
@@ -167,87 +149,31 @@ export default async function MyPage({ searchParams }: MyPageProps) {
             </Link>
           </div>
 
-          {/* 관리 콘솔 바로가기 (Stage 30, 31) */}
+          {/* 관리 콘솔 바로가기 */}
           <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200/60 dark:border-slate-800 space-y-1">
             <div className="px-3 py-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider">
-              관리자 콘솔
+              관리 콘솔 바로가기
             </div>
             <Link
               href="/admin/claims"
               className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
-              <span>클레임 및 반품 관리</span>
+              <span>클레임 관리</span>
               <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
             </Link>
             <Link
               href="/admin/inquiries"
               className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
-              <span>1:1 문의 답변 관리</span>
+              <span>1:1 문의 관리</span>
               <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
             </Link>
           </div>
-
-          {/* 회원 등급 혜택 안내 미니 위젯 */}
-          <div className="p-4 bg-slate-100 dark:bg-slate-800/60 rounded-2xl border border-slate-200/60 dark:border-slate-800 text-xs space-y-2">
-            <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200">
-              <Award className="w-4 h-4 text-amber-500" />
-              <span>현재 등급: {user.membershipGrade}</span>
-            </div>
-            <p className="text-slate-500 leading-relaxed">
-              누적 구매금액: <span className="font-semibold text-slate-700 dark:text-slate-300">{user.totalSpent.toLocaleString()}원</span><br />
-              VIP 등급 달성 시 전 상품 추가 5% 상시 할인 혜택이 적용됩니다.
-            </p>
-          </div>
         </div>
 
-        {/* 3. 메인 콘텐츠 본체 (탭 전환형) */}
-        <div className="md:col-span-3 space-y-6">
-          {/* 상단 탭 전환 바 */}
-          <div className="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 w-fit">
-            <Link
-              href="/my-page?tab=orders"
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                tab === 'orders'
-                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-              }`}
-            >
-              <Package className="w-4 h-4" />
-              <span>주문 내역 & 취소/반품</span>
-            </Link>
-            <Link
-              href="/my-page?tab=profile"
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                tab === 'profile'
-                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-              }`}
-            >
-              <Settings className="w-4 h-4" />
-              <span>회원정보 수정</span>
-            </Link>
-          </div>
-
-          {tab === 'profile' ? (
-            <ProfileForm
-              initialData={{
-                name: user.name,
-                phone: user.phone,
-                personalCustomsCode: user.personalCustomsCode,
-                gender: user.gender,
-                birthYear: user.birthYear,
-                defaultAddress: user.defaultAddress,
-                defaultZipcode: user.defaultZipcode,
-                smsConsent: user.smsConsent,
-                emailConsent: user.emailConsent,
-              }}
-            />
-          ) : (
-            <div className="space-y-4">
-              <OrderListViewer initialOrders={orders} totalCount={totalCount} />
-            </div>
-          )}
+        {/* 클레임 기본 탭으로 열리는 주문 리스트 */}
+        <div className="md:col-span-3">
+          <OrderListViewer initialOrders={orders} totalCount={totalCount} initialTab="CANCELLED" />
         </div>
       </div>
     </div>

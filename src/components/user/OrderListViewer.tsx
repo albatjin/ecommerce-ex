@@ -26,6 +26,7 @@ import {
 interface OrderListViewerProps {
   initialOrders: OrderListItemDTO[];
   totalCount: number;
+  initialTab?: FilterTab;
 }
 
 type FilterTab = 'ALL' | 'PAID' | 'PREPARING' | 'SHIPPING' | 'DELIVERED' | 'CANCELLED';
@@ -106,10 +107,11 @@ const RETURN_REASONS = [
 export function OrderListViewer({
   initialOrders,
   totalCount,
+  initialTab = 'ALL',
 }: OrderListViewerProps) {
   const router = useRouter();
   const [orders, setOrders] = useState<OrderListItemDTO[]>(initialOrders);
-  const [activeTab, setActiveTab] = useState<FilterTab>('ALL');
+  const [activeTab, setActiveTab] = useState<FilterTab>(initialTab);
 
   // 모달 상태
   const [selectedOrder, setSelectedOrder] = useState<OrderListItemDTO | null>(null);
