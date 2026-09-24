@@ -158,3 +158,4 @@ export class SupabaseOrderRepository implements IOrderRepository {
     return OrderNumber.create(`ORD-${dateStr}-${millis}`).getValue();
   }
 }
+

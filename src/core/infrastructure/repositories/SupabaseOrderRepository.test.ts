@@ -183,3 +183,4 @@ describe('SupabaseOrderRepository', () => {
     expect(orderNumber.value).toMatch(/^ORD-\d{8}-[A-Z0-9]{5}$/);
   });
 });
+

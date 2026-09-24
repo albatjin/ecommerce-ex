@@ -111,3 +111,4 @@ describe('OrderMapper', () => {
     expect(itemPersistenceList[0].total_price).toBe(50000);
   });
 });
+
