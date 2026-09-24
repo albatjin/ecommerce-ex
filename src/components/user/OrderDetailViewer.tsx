@@ -1,18 +1,29 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Truck,
   CreditCard,
   ShoppingBag,
-  ShieldAlert,
   CheckCircle2,
-  Clock,
   Box,
+  AlertTriangle,
+  RotateCcw,
+  XCircle,
+  X,
+  Loader2,
+  Info,
 } from 'lucide-react';
 import type { OrderDetailDTO } from '@/core/application/order/dtos/OrderDTO';
+import type { OrderStatus } from '@/shared/types/database.types';
 import { STATUS_STYLE_MAP } from './OrderListViewer';
+import {
+  cancelOrderAction,
+  requestReturnAction,
+} from '@/app/actions/order.actions';
 
 interface OrderDetailViewerProps {
   order: OrderDetailDTO;
@@ -25,13 +36,54 @@ const ORDER_STEPS = [
   { key: 'DELIVERED', label: '배송 완료', icon: CheckCircle2 },
 ];
 
+const CANCEL_REASONS = [
+  '단순 변심',
+  '배송지/옵션 변경 후 재주문',
+  '배송 지연 예상',
+  '다른 상품으로 재주문',
+  '기타 사유',
+];
+
+const RETURN_REASONS = [
+  '상품 파손 / 불량',
+  '오배송 / 상품 누락',
+  '단순 변심 (사이즈/색상 불일치)',
+  '상품 설명과 다름',
+  '기타 사유',
+];
+
 export function OrderDetailViewer({ order }: OrderDetailViewerProps) {
-  const currentStepIndex = ORDER_STEPS.findIndex((s) => s.key === order.status);
-  const isCancelled =
-    order.status === 'CANCELLED' ||
-    order.status === 'CANCEL_REQUESTED' ||
-    order.status === 'RETURNED' ||
-    order.status === 'RETURN_REQUESTED';
+  const router = useRouter();
+
+  // 내부 상태 관리 (즉각적인 UI 반응을 위해)
+  const [currentStatus, setCurrentStatus] = useState<OrderStatus>(order.status);
+  const [currentStatusLabel, setCurrentStatusLabel] = useState(order.statusLabel);
+
+  // 모달 상태
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+
+  // 사유 입력
+  const [selectedCancelPreset, setSelectedCancelPreset] = useState(CANCEL_REASONS[0]);
+  const [cancelDetail, setCancelDetail] = useState('');
+  const [selectedReturnPreset, setSelectedReturnPreset] = useState(RETURN_REASONS[0]);
+  const [returnDetail, setReturnDetail] = useState('');
+
+  // 비동기 처리 상태
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successBanner, setSuccessBanner] = useState<string | null>(null);
+
+  const currentStepIndex = ORDER_STEPS.findIndex((s) => s.key === currentStatus);
+  const isCancelledOrReturned =
+    currentStatus === 'CANCELLED' ||
+    currentStatus === 'CANCEL_REQUESTED' ||
+    currentStatus === 'RETURNED' ||
+    currentStatus === 'RETURN_REQUESTED';
+
+  const isCancellable =
+    currentStatus === 'PAID' || currentStatus === 'PAYMENT_PENDING';
+  const isReturnEligible = currentStatus === 'DELIVERED';
 
   const orderDate = new Date(order.createdAt).toLocaleDateString('ko-KR', {
     year: 'numeric',
@@ -41,7 +93,88 @@ export function OrderDetailViewer({ order }: OrderDetailViewerProps) {
     minute: '2-digit',
   });
 
-  const style = STATUS_STYLE_MAP[order.status] || STATUS_STYLE_MAP.PAID;
+  const style = STATUS_STYLE_MAP[currentStatus] || STATUS_STYLE_MAP.PAID;
+
+  // 주문 취소 처리
+  const handleCancelOrder = async () => {
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    const fullReason =
+      selectedCancelPreset === '기타 사유' && cancelDetail.trim()
+        ? cancelDetail.trim()
+        : cancelDetail.trim()
+        ? `${selectedCancelPreset}: ${cancelDetail.trim()}`
+        : selectedCancelPreset;
+
+    try {
+      const result = await cancelOrderAction({
+        orderId: order.id,
+        reason: fullReason,
+      });
+
+      if (!result.success) {
+        setErrorMessage(result.error || '주문 취소에 실패했습니다.');
+        return;
+      }
+
+      setCurrentStatus('CANCELLED');
+      setCurrentStatusLabel('주문 취소');
+      setIsCancelModalOpen(false);
+      setSuccessBanner(
+        `주문 취소가 완료되었습니다. (환불 완료 금액: ${(
+          result.data?.refundedAmount ?? order.totalPaidAmount
+        ).toLocaleString()}원)`
+      );
+      router.refresh();
+    } catch {
+      setErrorMessage('주문 취소 중 통신 오류가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 반품 신청 처리
+  const handleRequestReturn = async () => {
+    const fullReason =
+      selectedReturnPreset === '기타 사유' && returnDetail.trim()
+        ? returnDetail.trim()
+        : returnDetail.trim()
+        ? `${selectedReturnPreset}: ${returnDetail.trim()}`
+        : selectedReturnPreset;
+
+    if (!fullReason.trim()) {
+      setErrorMessage('반품 사유를 입력해 주세요.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await requestReturnAction({
+        orderId: order.id,
+        reason: fullReason,
+      });
+
+      if (!result.success) {
+        setErrorMessage(result.error || '반품 신청에 실패했습니다.');
+        return;
+      }
+
+      setCurrentStatus('RETURN_REQUESTED');
+      setCurrentStatusLabel('반품 신청');
+      setIsReturnModalOpen(false);
+      setSuccessBanner(
+        '반품 신청이 성공적으로 접수되었습니다. 고객센터에서 회수 기사님을 배정해 드릴 예정입니다.'
+      );
+      router.refresh();
+    } catch {
+      setErrorMessage('반품 신청 중 통신 오류가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -55,11 +188,13 @@ export function OrderDetailViewer({ order }: OrderDetailViewerProps) {
             <ArrowLeft className="w-4 h-4" />
             <span>주문 목록으로 돌아가기</span>
           </Link>
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-extrabold border ${style.bg} ${style.text} ${style.border}`}
-          >
-            {order.statusLabel}
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-extrabold border ${style.bg} ${style.text} ${style.border}`}
+            >
+              {currentStatusLabel}
+            </span>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-baseline justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -69,16 +204,78 @@ export function OrderDetailViewer({ order }: OrderDetailViewerProps) {
               {order.orderNumber}
             </h1>
           </div>
-          <div className="text-right">
-            <span className="text-xs text-slate-400">총 결제금액</span>
-            <div className="text-xl font-black text-blue-600 dark:text-blue-400">
-              {order.totalPaidAmount.toLocaleString()}원
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <span className="text-xs text-slate-400">총 결제금액</span>
+              <div className="text-xl font-black text-blue-600 dark:text-blue-400">
+                {order.totalPaidAmount.toLocaleString()}원
+              </div>
             </div>
+
+            {/* 주문 취소 / 반품 신청 액션 버튼 */}
+            {isCancellable && (
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorMessage(null);
+                  setIsCancelModalOpen(true);
+                }}
+                className="px-4 py-2 rounded-2xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-950/60 border border-rose-200 dark:border-rose-900 transition-colors shadow-xs"
+              >
+                주문 취소
+              </button>
+            )}
+
+            {isReturnEligible && (
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorMessage(null);
+                  setIsReturnModalOpen(true);
+                }}
+                className="px-4 py-2 rounded-2xl text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-400 dark:hover:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-900 transition-colors shadow-xs"
+              >
+                반품 신청
+              </button>
+            )}
           </div>
         </div>
 
+        {/* 성공 안내 배너 */}
+        {successBanner && (
+          <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <span>{successBanner}</span>
+          </div>
+        )}
+
+        {/* 클레임 상태 안내 배너 */}
+        {currentStatus === 'CANCELLED' && (
+          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2.5">
+            <XCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">주문이 정상적으로 취소되었습니다.</p>
+              <p className="text-slate-600 dark:text-slate-400 mt-0.5">
+                결제 승인 취소 및 환불이 완료되었으며, 사용하신 적립금과 쿠폰이 원상 복구되었습니다.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {currentStatus === 'RETURN_REQUESTED' && (
+          <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+            <RotateCcw className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">반품 신청이 접수되었습니다.</p>
+              <p className="text-slate-600 dark:text-slate-400 mt-0.5">
+                담당 기사님이 수거를 위해 방문할 예정입니다. 상품이 회수되어 검수가 완료되면 환불이 최종 승인됩니다.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* 2. 배송 상태 진행 바 (취소/반품이 아닐 경우) */}
-        {!isCancelled && (
+        {!isCancelledOrReturned && (
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
             <div className="grid grid-cols-4 gap-2 relative">
               {ORDER_STEPS.map((step, idx) => {
@@ -245,7 +442,234 @@ export function OrderDetailViewer({ order }: OrderDetailViewerProps) {
           </div>
         </div>
       </div>
+
+      {/* ========================================================= */}
+      {/* 5. 주문 취소 모달 */}
+      {/* ========================================================= */}
+      {isCancelModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+        >
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-rose-600" />
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  주문 취소 신청
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCancelModalOpen(false)}
+                disabled={isSubmitting}
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* 취소 요약 정보 */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
+              <div className="flex justify-between text-slate-600 dark:text-slate-300">
+                <span>주문 번호</span>
+                <span className="font-mono font-bold">{order.orderNumber}</span>
+              </div>
+              <div className="flex justify-between text-slate-600 dark:text-slate-300">
+                <span>환불 예정 금액</span>
+                <span className="font-bold text-rose-600">
+                  {order.totalPaidAmount.toLocaleString()}원
+                </span>
+              </div>
+              {order.pointUsed > 0 && (
+                <div className="flex justify-between text-slate-600 dark:text-slate-300">
+                  <span>반환 예정 적립금</span>
+                  <span className="font-bold text-amber-600">
+                    +{order.pointUsed.toLocaleString()}P
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* 취소 사유 선택 */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                취소 사유 선택
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {CANCEL_REASONS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setSelectedCancelPreset(preset)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                      selectedCancelPreset === preset
+                        ? 'bg-rose-500 text-white border-rose-500 shadow-xs'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={cancelDetail}
+                onChange={(e) => setCancelDetail(e.target.value)}
+                placeholder="상세 사유가 있으시면 입력해 주세요 (선택사항)"
+                rows={2}
+                className="w-full mt-2 p-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-rose-500 text-slate-900 dark:text-white"
+              />
+            </div>
+
+            {/* 안내 문구 */}
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 text-[11px] text-rose-700 dark:text-rose-300">
+              <Info className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                주문 취소 시 즉시 승인 취소 및 환불 절차가 진행되며, 주문 상품의 재고가 복원됩니다.
+              </span>
+            </div>
+
+            {/* 오류 메시지 */}
+            {errorMessage && (
+              <div className="p-3 rounded-xl bg-rose-100 dark:bg-rose-950/80 text-xs font-bold text-rose-700 dark:text-rose-300">
+                {errorMessage}
+              </div>
+            )}
+
+            {/* 버튼 액션 */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsCancelModalOpen(false)}
+                disabled={isSubmitting}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                돌아가기
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelOrder}
+                disabled={isSubmitting}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors flex items-center gap-1.5 shadow-md shadow-rose-600/20 disabled:opacity-50"
+              >
+                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                <span>주문 취소 확정</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 6. 반품 신청 모달 */}
+      {/* ========================================================= */}
+      {isReturnModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+        >
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <RotateCcw className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  반품 신청
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsReturnModalOpen(false)}
+                disabled={isSubmitting}
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* 반품 주문 정보 */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
+              <div className="flex justify-between text-slate-600 dark:text-slate-300">
+                <span>주문 번호</span>
+                <span className="font-mono font-bold">{order.orderNumber}</span>
+              </div>
+              <div className="flex justify-between text-slate-600 dark:text-slate-300">
+                <span>결제 금액</span>
+                <span className="font-bold text-slate-900 dark:text-white">
+                  {order.totalPaidAmount.toLocaleString()}원
+                </span>
+              </div>
+            </div>
+
+            {/* 반품 사유 선택 */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                반품 사유 선택 (필수)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {RETURN_REASONS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setSelectedReturnPreset(preset)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                      selectedReturnPreset === preset
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={returnDetail}
+                onChange={(e) => setReturnDetail(e.target.value)}
+                placeholder="상세 사유를 자세히 적어주시면 빠른 처리에 도움이 됩니다."
+                rows={3}
+                className="w-full mt-2 p-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+              />
+            </div>
+
+            {/* 안내 문구 */}
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 text-[11px] text-indigo-700 dark:text-indigo-300">
+              <Info className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                반품 신청 접수 후 1~2영업일 이내에 수거 기사님이 방문하므로, 원래 상품 포장 상태로 보관해 주시기 바랍니다.
+              </span>
+            </div>
+
+            {/* 오류 메시지 */}
+            {errorMessage && (
+              <div className="p-3 rounded-xl bg-rose-100 dark:bg-rose-950/80 text-xs font-bold text-rose-700 dark:text-rose-300">
+                {errorMessage}
+              </div>
+            )}
+
+            {/* 버튼 액션 */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsReturnModalOpen(false)}
+                disabled={isSubmitting}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                돌아가기
+              </button>
+              <button
+                type="button"
+                onClick={handleRequestReturn}
+                disabled={isSubmitting}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center gap-1.5 shadow-md shadow-indigo-600/20 disabled:opacity-50"
+              >
+                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                <span>반품 신청 접수</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

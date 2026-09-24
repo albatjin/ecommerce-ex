@@ -19,6 +19,7 @@ export interface CancelOrderOutput {
   status: OrderStatus;
   cancelledAt: Date;
   refundedAmount: number;
+  refundedPoints?: number;
   refundTransactionId?: string;
 }
 
@@ -137,6 +138,7 @@ export class CancelOrderUseCase {
       status: order.status,
       cancelledAt: order.cancelledAt || now,
       refundedAmount: paidAmount,
+      refundedPoints: order.pointUsed.amount,
       refundTransactionId,
     });
   }

@@ -4,6 +4,8 @@ import {
   approvePaymentAction,
   getOrderAction,
   getUserOrdersAction,
+  cancelOrderAction,
+  requestReturnAction,
 } from './order.actions';
 import { ok, fail } from '@/core/domain/shared/Result';
 import { DomainError } from '@/core/domain/shared/AppError';
@@ -57,6 +59,24 @@ vi.mock('@/core/application/order/use-cases/GetUserOrdersUseCase', () => {
   return {
     GetUserOrdersUseCase: class {
       execute = mockGetUserOrdersExecute;
+    },
+  };
+});
+
+const mockCancelExecute = vi.fn();
+vi.mock('@/core/application/order/use-cases/CancelOrderUseCase', () => {
+  return {
+    CancelOrderUseCase: class {
+      execute = mockCancelExecute;
+    },
+  };
+});
+
+const mockReturnExecute = vi.fn();
+vi.mock('@/core/application/order/use-cases/RequestReturnUseCase', () => {
+  return {
+    RequestReturnUseCase: class {
+      execute = mockReturnExecute;
     },
   };
 });
@@ -269,3 +289,89 @@ describe('order.actions - getUserOrdersAction', () => {
     expect(result.data?.orders.length).toBe(1);
   });
 });
+
+describe('order.actions - cancelOrderAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-123' } } });
+  });
+
+  it('주문 취소 유즈케이스가 성공하면 결과를 반환한다', async () => {
+    mockCancelExecute.mockResolvedValue(
+      ok({
+        orderId: 'order-1',
+        orderNumber: 'ORD-20260924-00001',
+        cancelledAt: new Date(),
+        refundedAmount: 50000,
+        refundedPoints: 3000,
+      })
+    );
+
+    const result = await cancelOrderAction({
+      orderId: 'order-1',
+      reason: '단순 변심',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.orderNumber).toBe('ORD-20260924-00001');
+    expect(result.data?.refundedAmount).toBe(50000);
+    expect(result.data?.refundedPoints).toBe(3000);
+  });
+
+  it('주문 취소 유즈케이스가 실패하면 에러를 반환한다', async () => {
+    mockCancelExecute.mockResolvedValue(
+      fail(new DomainError('배송 중 상태에서는 주문을 즉시 취소할 수 없습니다.'))
+    );
+
+    const result = await cancelOrderAction({
+      orderId: 'order-1',
+      reason: '취소 요청',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('즉시 취소할 수 없습니다');
+  });
+});
+
+describe('order.actions - requestReturnAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-123' } } });
+  });
+
+  it('반품 신청 유즈케이스가 성공하면 결과를 반환한다', async () => {
+    mockReturnExecute.mockResolvedValue(
+      ok({
+        orderId: 'order-1',
+        orderNumber: 'ORD-20260924-00001',
+        status: 'RETURN_REQUESTED',
+        requestedAt: new Date(),
+        reason: '상품 불량/파손',
+      })
+    );
+
+    const result = await requestReturnAction({
+      orderId: 'order-1',
+      reason: '상품 불량/파손',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.status).toBe('RETURN_REQUESTED');
+    expect(result.data?.reason).toBe('상품 불량/파손');
+  });
+
+  it('반품 신청 유즈케이스가 실패하면 에러를 반환한다', async () => {
+    mockReturnExecute.mockResolvedValue(
+      fail(new DomainError('배송 완료(DELIVERED) 상태인 주문만 반품 신청이 가능합니다.'))
+    );
+
+    const result = await requestReturnAction({
+      orderId: 'order-1',
+      reason: '단순 변심',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('배송 완료');
+  });
+});
+

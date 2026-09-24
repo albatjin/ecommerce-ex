@@ -20,12 +20,42 @@ import {
 } from '@/core/application/order/use-cases/ApprovePaymentUseCase';
 import { GetOrderUseCase } from '@/core/application/order/use-cases/GetOrderUseCase';
 import { GetUserOrdersUseCase } from '@/core/application/order/use-cases/GetUserOrdersUseCase';
+import {
+  CancelOrderUseCase,
+  type CancelOrderOutput,
+} from '@/core/application/order/use-cases/CancelOrderUseCase';
+import {
+  RequestReturnUseCase,
+  type RequestReturnOutput,
+} from '@/core/application/order/use-cases/RequestReturnUseCase';
 import type { PlaceOrderInput } from '@/core/application/order/dtos/CheckoutDTO';
 import type {
   OrderDetailDTO,
   UserOrdersResultDTO,
 } from '@/core/application/order/dtos/OrderDTO';
 import type { OrderStatus } from '@/shared/types/database.types';
+
+export interface CancelOrderActionInput {
+  orderId: string;
+  reason?: string;
+}
+
+export interface CancelOrderActionResult {
+  success: boolean;
+  data?: CancelOrderOutput;
+  error?: string;
+}
+
+export interface RequestReturnActionInput {
+  orderId: string;
+  reason: string;
+}
+
+export interface RequestReturnActionResult {
+  success: boolean;
+  data?: RequestReturnOutput;
+  error?: string;
+}
 
 export interface OrderActionResult {
   success: boolean;
@@ -285,3 +315,109 @@ export async function getUserOrdersAction(params?: {
     };
   }
 }
+
+/**
+ * 주문 취소 Action
+ * 결제 완료 전(PAYMENT_PENDING) 또는 결제 완료 후(PAID) 상태의 주문을 취소하고 PG 환불, 재고 복원, 적립금 복구를 수행합니다.
+ */
+export async function cancelOrderAction(
+  input: CancelOrderActionInput
+): Promise<CancelOrderActionResult> {
+  try {
+    const supabase = await getServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const orderRepo = new SupabaseOrderRepository(supabase);
+    const paymentGateway = new MockPaymentGateway();
+    const productRepo = new SupabaseProductRepository(supabase);
+    const pointRepo = new SupabasePointRepository(supabase);
+
+    const useCase = new CancelOrderUseCase(
+      orderRepo,
+      paymentGateway,
+      productRepo,
+      pointRepo
+    );
+
+    const result = await useCase.execute({
+      orderId: input.orderId,
+      customerId: user?.id,
+      reason: input.reason,
+    });
+
+    if (result.isFailure) {
+      return {
+        success: false,
+        error: result.getError().message,
+      };
+    }
+
+    revalidatePath('/my-page/orders');
+    revalidatePath(`/my-page/orders/${input.orderId}`);
+    revalidatePath('/orders');
+
+    return {
+      success: true,
+      data: result.getValue(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : '주문 취소 처리 중 오류가 발생했습니다.',
+    };
+  }
+}
+
+/**
+ * 반품 신청 Action
+ * 배송 완료(DELIVERED)된 주문에 대해 반품 요청을 접수합니다.
+ */
+export async function requestReturnAction(
+  input: RequestReturnActionInput
+): Promise<RequestReturnActionResult> {
+  try {
+    const supabase = await getServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const orderRepo = new SupabaseOrderRepository(supabase);
+    const useCase = new RequestReturnUseCase(orderRepo);
+
+    const result = await useCase.execute({
+      orderId: input.orderId,
+      customerId: user?.id,
+      reason: input.reason,
+    });
+
+    if (result.isFailure) {
+      return {
+        success: false,
+        error: result.getError().message,
+      };
+    }
+
+    revalidatePath('/my-page/orders');
+    revalidatePath(`/my-page/orders/${input.orderId}`);
+    revalidatePath('/orders');
+
+    return {
+      success: true,
+      data: result.getValue(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : '반품 신청 처리 중 오류가 발생했습니다.',
+    };
+  }
+}
+
