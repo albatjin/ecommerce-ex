@@ -45,7 +45,7 @@ export function CartPageViewer() {
       alert('주문하실 상품을 하나 이상 선택해 주세요.');
       return;
     }
-    router.push('/checkout');
+    window.location.href = '/checkout';
   };
 
   if (items.length === 0) {

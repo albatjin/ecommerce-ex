@@ -11,6 +11,9 @@ import type {
 } from '@/core/application/order/dtos/CheckoutDTO';
 import type { AvailableCouponDTO } from '@/core/application/promotion/dtos/PromotionDTO';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: '주문 / 결제 | CommerceHub',
   description: '배송지 정보 및 결제 수단을 입력하고 주문을 완료하세요.',
@@ -28,6 +31,22 @@ export default async function CheckoutPage() {
 
   // 선택된 품목이 없을 경우(장바구니가 완전히 비어있는 경우) 안내 화면 노출
   if (selectedItems.length === 0) {
+    async function addSampleItemAndCheckout() {
+      'use server';
+      const { addToCartAction } = await import('@/app/actions/cart.actions');
+      await addToCartAction({
+        productId: 'sample-20',
+        productName: '프리미엄 캐시미어 블렌드 싱글 코트',
+        price: 249000,
+        quantity: 1,
+        coverImageUrl:
+          'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+        shippingFee: 0,
+      });
+      const { redirect } = await import('next/navigation');
+      redirect('/checkout');
+    }
+
     return (
       <div className="container-custom py-16">
         <div className="max-w-md mx-auto text-center p-10 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
@@ -39,16 +58,24 @@ export default async function CheckoutPage() {
               주문할 상품이 선택되지 않았습니다
             </h1>
             <p className="text-sm text-slate-500">
-              장바구니에서 주문하실 상품을 선택하신 후 다시 주문하기를 눌러주세요.
+              장바구니가 비어 있습니다. 인기 상품을 바로 담고 결제를 진행하시거나 상품을 둘러보세요.
             </p>
           </div>
           <div className="pt-2 flex flex-col gap-2.5">
+            <form action={addSampleItemAndCheckout}>
+              <button
+                type="submit"
+                className="w-full py-3.5 px-6 rounded-2xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-sm shadow-md shadow-amber-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>⚡ 인기 상품 담고 바로 결제 진행하기</span>
+              </button>
+            </form>
             <Link
               href="/cart"
-              className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all"
+              className="inline-flex items-center justify-center gap-2 w-full py-3 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>장바구니로 돌아가기</span>
+              <span>장바구니로 이동</span>
             </Link>
             <Link
               href="/products"

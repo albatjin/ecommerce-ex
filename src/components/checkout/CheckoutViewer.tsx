@@ -698,32 +698,50 @@ export function CheckoutViewer({
               })}
             </div>
 
-            {/* PayPal 결제 선택 시 안내 카드 */}
+            {/* PayPal 결제 선택 시 안내 카드 및 바로 결제 버튼 */}
             {selectedPaymentMethod === 'PAYPAL' && (
-              <div className="p-4 rounded-2xl bg-[#003087]/5 dark:bg-[#003087]/20 border border-[#003087]/20 flex items-center justify-between animate-in fade-in duration-150">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#003087] text-white flex items-center justify-center font-black text-sm italic shadow-xs">
-                    <span className="text-[#0079C1]">P</span>
-                    <span className="-ml-1 text-white">P</span>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-[#003087] dark:text-[#0079C1]">
-                        PayPal 글로벌 간편결제
-                      </span>
-                      <span className="text-[10px] font-bold text-amber-700 bg-amber-100 dark:bg-amber-950/60 dark:text-amber-400 px-2 py-0.5 rounded-full">
-                        USD 결제
-                      </span>
+              <div className="p-5 rounded-2xl bg-[#003087]/5 dark:bg-[#003087]/20 border border-[#003087]/25 space-y-4 animate-in fade-in duration-150">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#003087] text-white flex items-center justify-center font-black text-sm italic shadow-xs">
+                      <span className="text-[#0079C1]">P</span>
+                      <span className="-ml-1 text-white">P</span>
                     </div>
-                    <p className="text-xs text-slate-500">
-                      약 ${amountUSD.toFixed(2)} USD (기준환율 ₩1,400/$ 적용)
-                    </p>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-[#003087] dark:text-[#0079C1]">
+                          PayPal 글로벌 간편결제
+                        </span>
+                        <span className="text-[10px] font-bold text-amber-700 bg-amber-100 dark:bg-amber-950/60 dark:text-amber-400 px-2 py-0.5 rounded-full">
+                          USD 결제
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        약 ${amountUSD.toFixed(2)} USD (기준환율 ₩1,400/$ 적용)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Buyer Protection</span>
                   </div>
                 </div>
-                <div className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Buyer Protection</span>
-                </div>
+
+                {/* Section 4 내 바로 결제 버튼 */}
+                <button
+                  type="button"
+                  onClick={handleOpenPayPalModal}
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 px-4 rounded-xl bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-black text-sm shadow-md shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <span className="font-extrabold text-[#003087]">Pay with</span>
+                  <span className="font-black italic text-[#003087] tracking-tight text-base">
+                    PayPal
+                  </span>
+                  <span className="text-xs font-bold text-slate-800">
+                    (${amountUSD.toFixed(2)} USD)
+                  </span>
+                </button>
               </div>
             )}
           </div>

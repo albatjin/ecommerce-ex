@@ -104,7 +104,7 @@ describe('CheckoutViewer Component', () => {
 
     // 150,000원 / 1,400 = 약 $107.14 USD
     await waitFor(() => {
-      expect(screen.getByText(/Pay with/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Pay with/i)[0]).toBeInTheDocument();
       expect(screen.getByText(/PayPal 글로벌 간편결제/)).toBeInTheDocument();
       expect(screen.getAllByText(/\$107.14 USD/).length).toBeGreaterThanOrEqual(1);
     });

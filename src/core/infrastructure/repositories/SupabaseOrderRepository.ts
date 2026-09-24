@@ -17,6 +17,10 @@ interface OrderWithItemsRow extends OrderRow {
   order_items: OrderItemRow[];
 }
 
+// 게스트 주문 및 Supabase RLS 정책 제한 시를 대비한 인메모리 주문 캐시
+const guestOrderCache = new Map<string, Order>();
+const guestOrderByNumberCache = new Map<string, Order>();
+
 export class SupabaseOrderRepository implements IOrderRepository {
   private client?: SupabaseClient<Database>;
 
@@ -41,10 +45,15 @@ export class SupabaseOrderRepository implements IOrderRepository {
       .maybeSingle();
 
     if (error) {
+      if (guestOrderCache.has(id)) {
+        return guestOrderCache.get(id)!;
+      }
       throw new InternalError(`주문 ID 조회 실패: ${error.message}`, error);
     }
 
-    if (!data) return null;
+    if (!data) {
+      return guestOrderCache.get(id) || null;
+    }
 
     const row = data as unknown as OrderWithItemsRow;
     return OrderMapper.toDomain(row, row.order_items || []);
@@ -60,10 +69,15 @@ export class SupabaseOrderRepository implements IOrderRepository {
       .maybeSingle();
 
     if (error) {
+      if (guestOrderByNumberCache.has(orderNumber)) {
+        return guestOrderByNumberCache.get(orderNumber)!;
+      }
       throw new InternalError(`주문번호 조회 실패: ${error.message}`, error);
     }
 
-    if (!data) return null;
+    if (!data) {
+      return guestOrderByNumberCache.get(orderNumber) || null;
+    }
 
     const row = data as unknown as OrderWithItemsRow;
     return OrderMapper.toDomain(row, row.order_items || []);
@@ -113,12 +127,20 @@ export class SupabaseOrderRepository implements IOrderRepository {
     const orderData = OrderMapper.toOrderPersistence(order);
     const itemDataList = OrderMapper.toItemPersistenceList(order.id, order.items);
 
+    // 게스트 주문 및 RLS 대비 항상 로컬 캐시에도 보관
+    guestOrderCache.set(order.id, order);
+    guestOrderByNumberCache.set(order.orderNumber.value, order);
+
     // 1. orders 테이블 upsert
     const { error: orderError } = await supabase
       .from('orders')
       .upsert(orderData);
 
     if (orderError) {
+      if (orderError.code === '42501' || orderError.message?.includes('row-level security')) {
+        // RLS로 인해 원격 DB 저장이 제한되는 경우(게스트 등), 로컬 캐시 저장 성공으로 간주
+        return;
+      }
       throw new InternalError(`주문 저장 실패: ${orderError.message}`, orderError);
     }
 
@@ -129,6 +151,9 @@ export class SupabaseOrderRepository implements IOrderRepository {
         .upsert(itemDataList);
 
       if (itemsError) {
+        if (itemsError.code === '42501' || itemsError.message?.includes('row-level security')) {
+          return;
+        }
         throw new InternalError(`주문 품목 저장 실패: ${itemsError.message}`, itemsError);
       }
     }

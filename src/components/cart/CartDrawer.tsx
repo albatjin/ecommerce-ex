@@ -60,7 +60,7 @@ export function CartDrawer() {
 
   const handleCheckoutClick = () => {
     closeDrawer();
-    router.push('/checkout');
+    window.location.href = '/checkout';
   };
 
   return (
