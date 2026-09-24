@@ -1,9 +1,20 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ProductGrid } from './ProductGrid';
 import type { ProductSummaryDTO } from '@/core/application/catalog/dtos/GetProductsDTO';
 
+const pushMock = vi.fn();
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: pushMock }),
+  usePathname: () => '/products',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 describe('ProductGrid', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   const sampleProducts: ProductSummaryDTO[] = [
     {
       id: 'prod-1',
@@ -35,7 +46,7 @@ describe('ProductGrid', () => {
     },
   ];
 
-  it('상품 목록과 페이지네이션을 정상 렌더링한다', () => {
+  it('상품 목록과 페이지네이션을 정상 렌더링하고 onPageChange가 있으면 호출한다', () => {
     const handlePageChange = vi.fn();
 
     render(
@@ -57,6 +68,21 @@ describe('ProductGrid', () => {
     expect(handlePageChange).toHaveBeenCalledWith(2);
   });
 
+  it('onPageChange가 없을 때는 router.push로 URL query 파라미터를 갱신한다', () => {
+    render(
+      <ProductGrid
+        products={sampleProducts}
+        totalCount={30}
+        currentPage={1}
+        totalPages={3}
+      />
+    );
+
+    const page3Btn = screen.getByRole('button', { name: '3' });
+    fireEvent.click(page3Btn);
+    expect(pushMock).toHaveBeenCalledWith('/products?page=3');
+  });
+
   it('상품이 없을 때 빈 화면 안내를 렌더링한다', () => {
     render(
       <ProductGrid
@@ -71,4 +97,3 @@ describe('ProductGrid', () => {
     expect(screen.getByText('전체 상품 보기')).toBeInTheDocument();
   });
 });
-

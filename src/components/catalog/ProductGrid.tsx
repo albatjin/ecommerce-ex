@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ProductCard } from './ProductCard';
 import { ChevronLeft, ChevronRight, PackageSearch } from 'lucide-react';
 import type { ProductSummaryDTO } from '@/core/application/catalog/dtos/GetProductsDTO';
@@ -21,6 +22,20 @@ export function ProductGrid({
   onPageChange,
   onAddToCart,
 }: ProductGridProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const handlePageClick = (page: number) => {
+    if (onPageChange) {
+      onPageChange(page);
+      return;
+    }
+    const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
+    params.set('page', String(page));
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
   if (products.length === 0) {
     return (
       <div className="py-20 flex flex-col items-center justify-center text-center bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-8">
@@ -79,7 +94,7 @@ export function ProductGrid({
           <button
             type="button"
             disabled={currentPage <= 1}
-            onClick={() => onPageChange && onPageChange(currentPage - 1)}
+            onClick={() => handlePageClick(currentPage - 1)}
             className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             aria-label="이전 페이지"
           >
@@ -93,7 +108,7 @@ export function ProductGrid({
               <button
                 key={pageNum}
                 type="button"
-                onClick={() => onPageChange && onPageChange(pageNum)}
+                onClick={() => handlePageClick(pageNum)}
                 className={`min-w-[38px] h-[38px] px-3 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                   isActive
                     ? 'bg-blue-600 text-white shadow-sm'
@@ -110,7 +125,7 @@ export function ProductGrid({
           <button
             type="button"
             disabled={currentPage >= totalPages}
-            onClick={() => onPageChange && onPageChange(currentPage + 1)}
+            onClick={() => handlePageClick(currentPage + 1)}
             className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             aria-label="다음 페이지"
           >
@@ -121,4 +136,3 @@ export function ProductGrid({
     </div>
   );
 }
-

@@ -44,3 +44,4 @@ export interface ProductDetailDTO {
   createdAt: string;
   updatedAt: string;
 }
+
