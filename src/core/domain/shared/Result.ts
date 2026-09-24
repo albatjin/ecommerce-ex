@@ -72,3 +72,4 @@ export class Result<T, E = string> {
 
 export const ok = Result.ok;
 export const fail = Result.fail;
+

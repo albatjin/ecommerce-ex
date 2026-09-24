@@ -99,3 +99,4 @@ export class InternalError extends BaseError {
     super(message, details);
   }
 }
+

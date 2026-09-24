@@ -50,3 +50,4 @@ describe('Entity Base Class', () => {
     expect(user.equals(undefined)).toBe(false);
   });
 });
+

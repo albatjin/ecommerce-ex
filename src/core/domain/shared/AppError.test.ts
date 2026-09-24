@@ -61,3 +61,4 @@ describe('AppError Hierarchy', () => {
     expect(error.code).toBe('INTERNAL_SERVER_ERROR');
   });
 });
+

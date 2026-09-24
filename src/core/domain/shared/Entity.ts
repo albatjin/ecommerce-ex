@@ -34,3 +34,4 @@ export abstract class Entity<T> {
     return this._id === object._id;
   }
 }
+

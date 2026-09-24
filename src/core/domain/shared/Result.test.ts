@@ -76,3 +76,4 @@ describe('Result Monad Pattern', () => {
     expect(combined.getError()).toBe('First error');
   });
 });
+

@@ -42,3 +42,4 @@ describe('ValueObject Base Class', () => {
     expect(money.equals(undefined)).toBe(false);
   });
 });
+
