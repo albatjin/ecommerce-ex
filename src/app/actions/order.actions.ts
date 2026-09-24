@@ -18,7 +18,14 @@ import {
   ApprovePaymentUseCase,
   type ApprovePaymentOutput,
 } from '@/core/application/order/use-cases/ApprovePaymentUseCase';
+import { GetOrderUseCase } from '@/core/application/order/use-cases/GetOrderUseCase';
+import { GetUserOrdersUseCase } from '@/core/application/order/use-cases/GetUserOrdersUseCase';
 import type { PlaceOrderInput } from '@/core/application/order/dtos/CheckoutDTO';
+import type {
+  OrderDetailDTO,
+  UserOrdersResultDTO,
+} from '@/core/application/order/dtos/OrderDTO';
+import type { OrderStatus } from '@/shared/types/database.types';
 
 export interface OrderActionResult {
   success: boolean;
@@ -29,6 +36,18 @@ export interface OrderActionResult {
 export interface ApprovePaymentActionResult {
   success: boolean;
   data?: ApprovePaymentOutput;
+  error?: string;
+}
+
+export interface GetOrderActionResult {
+  success: boolean;
+  data?: OrderDetailDTO;
+  error?: string;
+}
+
+export interface GetUserOrdersActionResult {
+  success: boolean;
+  data?: UserOrdersResultDTO;
   error?: string;
 }
 
@@ -166,6 +185,103 @@ export async function approvePaymentAction(
         error instanceof Error
           ? error.message
           : '결제 승인 처리 중 예기치 않은 오류가 발생했습니다.',
+    };
+  }
+}
+
+/**
+ * 주문 단건 상세 조회 Action (주문 번호 또는 주문 ID)
+ */
+export async function getOrderAction(params: {
+  orderId?: string;
+  orderNumber?: string;
+}): Promise<GetOrderActionResult> {
+  try {
+    const supabase = await getServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const orderRepo = new SupabaseOrderRepository(supabase);
+    const useCase = new GetOrderUseCase(orderRepo);
+
+    const result = await useCase.execute({
+      orderId: params.orderId,
+      orderNumber: params.orderNumber,
+      customerId: user?.id ?? null,
+    });
+
+    if (result.isFailure) {
+      return {
+        success: false,
+        error: result.getError().message,
+      };
+    }
+
+    return {
+      success: true,
+      data: result.getValue(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : '주문 정보를 불러오는 중 오류가 발생했습니다.',
+    };
+  }
+}
+
+/**
+ * 로그인 회원의 주문 목록 조회 Action
+ */
+export async function getUserOrdersAction(params?: {
+  status?: OrderStatus;
+  limit?: number;
+  offset?: number;
+}): Promise<GetUserOrdersActionResult> {
+  try {
+    const supabase = await getServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return {
+        success: false,
+        error: '로그인이 필요한 서비스입니다.',
+      };
+    }
+
+    const orderRepo = new SupabaseOrderRepository(supabase);
+    const useCase = new GetUserOrdersUseCase(orderRepo);
+
+    const result = await useCase.execute({
+      customerId: user.id,
+      status: params?.status,
+      limit: params?.limit,
+      offset: params?.offset,
+    });
+
+    if (result.isFailure) {
+      return {
+        success: false,
+        error: result.getError().message,
+      };
+    }
+
+    return {
+      success: true,
+      data: result.getValue(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : '주문 내역을 불러오는 중 오류가 발생했습니다.',
     };
   }
 }

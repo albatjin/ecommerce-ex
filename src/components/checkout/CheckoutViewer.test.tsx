@@ -165,7 +165,9 @@ describe('CheckoutViewer Component', () => {
     await waitFor(() => {
       expect(mockCreateOrderAction).toHaveBeenCalledTimes(1);
       expect(mockApprovePaymentAction).toHaveBeenCalledWith('ord-101');
-      expect(mockPush).toHaveBeenCalledWith('/');
+      expect(mockPush).toHaveBeenCalledWith(
+        '/checkout/success?orderNumber=ORD-20260924-00099'
+      );
     });
   });
 });

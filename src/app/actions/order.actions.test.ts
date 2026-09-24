@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createOrderAction, approvePaymentAction } from './order.actions';
+import {
+  createOrderAction,
+  approvePaymentAction,
+  getOrderAction,
+  getUserOrdersAction,
+} from './order.actions';
 import { ok, fail } from '@/core/domain/shared/Result';
 import { DomainError } from '@/core/domain/shared/AppError';
 
@@ -7,12 +12,13 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
+const mockGetUser = vi.fn().mockResolvedValue({ data: { user: { id: 'user-123' } } });
 vi.mock('@/core/infrastructure/supabase/server', () => ({
-  getServerClient: vi.fn().mockResolvedValue({
+  getServerClient: vi.fn().mockImplementation(() => ({
     auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-123' } } }),
+      getUser: mockGetUser,
     },
-  }),
+  })),
 }));
 
 vi.mock('./cart.actions', () => ({
@@ -33,6 +39,24 @@ vi.mock('@/core/application/order/use-cases/ApprovePaymentUseCase', () => {
   return {
     ApprovePaymentUseCase: class {
       execute = mockApproveExecute;
+    },
+  };
+});
+
+const mockGetOrderExecute = vi.fn();
+vi.mock('@/core/application/order/use-cases/GetOrderUseCase', () => {
+  return {
+    GetOrderUseCase: class {
+      execute = mockGetOrderExecute;
+    },
+  };
+});
+
+const mockGetUserOrdersExecute = vi.fn();
+vi.mock('@/core/application/order/use-cases/GetUserOrdersUseCase', () => {
+  return {
+    GetUserOrdersUseCase: class {
+      execute = mockGetUserOrdersExecute;
     },
   };
 });
@@ -70,6 +94,7 @@ vi.mock('@/core/infrastructure/repositories/SupabasePointRepository', () => ({
 describe('order.actions - createOrderAction', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-123' } } });
   });
 
   const baseInput = {
@@ -179,5 +204,68 @@ describe('order.actions - approvePaymentAction', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('결제 한도 초과');
+  });
+});
+
+describe('order.actions - getOrderAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-123' } } });
+  });
+
+  it('주문 번호로 조회 시 성공 데이터를 반환한다', async () => {
+    mockGetOrderExecute.mockResolvedValue(
+      ok({
+        id: 'order-1',
+        orderNumber: 'ORD-20260924-00001',
+        orderName: '샘플 상품 외 1건',
+        status: 'PAID',
+        statusLabel: '결제 완료',
+      })
+    );
+
+    const result = await getOrderAction({ orderNumber: 'ORD-20260924-00001' });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.orderNumber).toBe('ORD-20260924-00001');
+    expect(result.data?.statusLabel).toBe('결제 완료');
+  });
+});
+
+describe('order.actions - getUserOrdersAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-123' } } });
+  });
+
+  it('비로그인 사용자가 주문 목록 조회 시 실패를 반환한다', async () => {
+    mockGetUser.mockResolvedValueOnce({ data: { user: null } });
+
+    const result = await getUserOrdersAction();
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('로그인');
+  });
+
+  it('로그인 사용자의 주문 목록 조회가 성공한다', async () => {
+    mockGetUserOrdersExecute.mockResolvedValue(
+      ok({
+        orders: [
+          {
+            id: 'order-1',
+            orderNumber: 'ORD-20260924-00001',
+            orderName: '샘플 상품',
+            totalPaidAmount: 30000,
+          },
+        ],
+        totalCount: 1,
+      })
+    );
+
+    const result = await getUserOrdersAction();
+
+    expect(result.success).toBe(true);
+    expect(result.data?.totalCount).toBe(1);
+    expect(result.data?.orders.length).toBe(1);
   });
 });

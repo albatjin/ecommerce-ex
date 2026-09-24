@@ -185,8 +185,11 @@ export function CheckoutViewer({
           return;
         }
 
-        alert(`주문 및 결제가 성공적으로 완료되었습니다! (주문번호: ${approveRes.data?.orderNumber})`);
-        router.push('/');
+        router.push(
+          `/checkout/success?orderNumber=${encodeURIComponent(
+            approveRes.data?.orderNumber || ''
+          )}`
+        );
       }
     } catch (err) {
       setErrorMessage(
