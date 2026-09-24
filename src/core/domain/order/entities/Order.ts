@@ -229,6 +229,24 @@ export class Order extends Entity<OrderProps> {
     return ok();
   }
 
+  /**
+   * 반품 거절/반려: RETURN_REQUESTED -> DELIVERED
+   */
+  public rejectReturn(): Result<void, DomainError> {
+    if (this.props.status !== 'RETURN_REQUESTED') {
+      return fail(new DomainError(`반품 요청('RETURN_REQUESTED') 상태의 주문만 반품을 거절할 수 있습니다.`));
+    }
+
+    this.props.status = 'DELIVERED';
+    this.props.updatedAt = new Date();
+
+    for (const item of this.props.items) {
+      item.updateStatus('DELIVERED');
+    }
+
+    return ok();
+  }
+
   public static create(
     props: Omit<OrderProps, 'createdAt' | 'updatedAt' | 'totalPaidAmount'> & {
       totalPaidAmount?: Money;

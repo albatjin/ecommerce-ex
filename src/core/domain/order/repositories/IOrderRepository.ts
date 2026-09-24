@@ -5,6 +5,8 @@ import type { OrderStatus } from '@/shared/types/database.types';
 export interface FindOrdersFilter {
   customerId?: string;
   status?: OrderStatus;
+  statuses?: OrderStatus[];
+  searchQuery?: string;
   limit?: number;
   offset?: number;
 }

@@ -28,6 +28,19 @@ import {
   RequestReturnUseCase,
   type RequestReturnOutput,
 } from '@/core/application/order/use-cases/RequestReturnUseCase';
+import {
+  ApproveReturnUseCase,
+  type ApproveReturnOutput,
+} from '@/core/application/order/use-cases/ApproveReturnUseCase';
+import {
+  RejectReturnUseCase,
+  type RejectReturnOutput,
+} from '@/core/application/order/use-cases/RejectReturnUseCase';
+import {
+  GetAdminOrdersUseCase,
+  type GetAdminOrdersInput,
+  type AdminOrdersResultDTO,
+} from '@/core/application/order/use-cases/GetAdminOrdersUseCase';
 import type { PlaceOrderInput } from '@/core/application/order/dtos/CheckoutDTO';
 import type {
   OrderDetailDTO,
@@ -54,6 +67,34 @@ export interface RequestReturnActionInput {
 export interface RequestReturnActionResult {
   success: boolean;
   data?: RequestReturnOutput;
+  error?: string;
+}
+
+export interface ApproveReturnActionInput {
+  orderId: string;
+  adminNote?: string;
+}
+
+export interface ApproveReturnActionResult {
+  success: boolean;
+  data?: ApproveReturnOutput;
+  error?: string;
+}
+
+export interface RejectReturnActionInput {
+  orderId: string;
+  reason: string;
+}
+
+export interface RejectReturnActionResult {
+  success: boolean;
+  data?: RejectReturnOutput;
+  error?: string;
+}
+
+export interface GetAdminOrdersActionResult {
+  success: boolean;
+  data?: AdminOrdersResultDTO;
   error?: string;
 }
 
@@ -420,4 +461,131 @@ export async function requestReturnAction(
     };
   }
 }
+
+/**
+ * 반품 승인 Action (관리자 전용)
+ * 고객의 반품 요청(RETURN_REQUESTED) 건을 검수 후 승인하고 PG 결제 환불, 재고 복원, 적립금을 복구합니다.
+ */
+export async function approveReturnAction(
+  input: ApproveReturnActionInput
+): Promise<ApproveReturnActionResult> {
+  try {
+    const supabase = await getServerClient();
+    const orderRepo = new SupabaseOrderRepository(supabase);
+    const paymentGateway = new MockPaymentGateway();
+    const productRepo = new SupabaseProductRepository(supabase);
+    const pointRepo = new SupabasePointRepository(supabase);
+
+    const useCase = new ApproveReturnUseCase(
+      orderRepo,
+      paymentGateway,
+      productRepo,
+      pointRepo
+    );
+
+    const result = await useCase.execute(input);
+
+    if (result.isFailure) {
+      return {
+        success: false,
+        error: result.getError().message,
+      };
+    }
+
+    revalidatePath('/admin/orders');
+    revalidatePath('/my-page/orders');
+    revalidatePath(`/my-page/orders/${input.orderId}`);
+    revalidatePath('/orders');
+
+    return {
+      success: true,
+      data: result.getValue(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : '반품 승인 처리 중 오류가 발생했습니다.',
+    };
+  }
+}
+
+/**
+ * 반품 반려(거절) Action (관리자 전용)
+ * 반품 요청(RETURN_REQUESTED) 건을 반려하고 배송 완료(DELIVERED) 상태로 복구합니다.
+ */
+export async function rejectReturnAction(
+  input: RejectReturnActionInput
+): Promise<RejectReturnActionResult> {
+  try {
+    const supabase = await getServerClient();
+    const orderRepo = new SupabaseOrderRepository(supabase);
+    const useCase = new RejectReturnUseCase(orderRepo);
+
+    const result = await useCase.execute(input);
+
+    if (result.isFailure) {
+      return {
+        success: false,
+        error: result.getError().message,
+      };
+    }
+
+    revalidatePath('/admin/orders');
+    revalidatePath('/my-page/orders');
+    revalidatePath(`/my-page/orders/${input.orderId}`);
+    revalidatePath('/orders');
+
+    return {
+      success: true,
+      data: result.getValue(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : '반품 반려 처리 중 오류가 발생했습니다.',
+    };
+  }
+}
+
+/**
+ * 관리자 주문 및 클레임 목록 조회 Action
+ */
+export async function getAdminOrdersAction(
+  input: GetAdminOrdersInput = {}
+): Promise<GetAdminOrdersActionResult> {
+  try {
+    const supabase = await getServerClient();
+    const orderRepo = new SupabaseOrderRepository(supabase);
+    const useCase = new GetAdminOrdersUseCase(orderRepo);
+
+    const result = await useCase.execute(input);
+
+    if (result.isFailure) {
+      return {
+        success: false,
+        error: result.getError().message,
+      };
+    }
+
+    return {
+      success: true,
+      data: result.getValue(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : '관리자 주문 목록 조회 중 오류가 발생했습니다.',
+    };
+  }
+}
+
 

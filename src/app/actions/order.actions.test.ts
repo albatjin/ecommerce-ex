@@ -6,6 +6,9 @@ import {
   getUserOrdersAction,
   cancelOrderAction,
   requestReturnAction,
+  approveReturnAction,
+  rejectReturnAction,
+  getAdminOrdersAction,
 } from './order.actions';
 import { ok, fail } from '@/core/domain/shared/Result';
 import { DomainError } from '@/core/domain/shared/AppError';
@@ -77,6 +80,33 @@ vi.mock('@/core/application/order/use-cases/RequestReturnUseCase', () => {
   return {
     RequestReturnUseCase: class {
       execute = mockReturnExecute;
+    },
+  };
+});
+
+const mockApproveReturnExecute = vi.fn();
+vi.mock('@/core/application/order/use-cases/ApproveReturnUseCase', () => {
+  return {
+    ApproveReturnUseCase: class {
+      execute = mockApproveReturnExecute;
+    },
+  };
+});
+
+const mockRejectReturnExecute = vi.fn();
+vi.mock('@/core/application/order/use-cases/RejectReturnUseCase', () => {
+  return {
+    RejectReturnUseCase: class {
+      execute = mockRejectReturnExecute;
+    },
+  };
+});
+
+const mockGetAdminOrdersExecute = vi.fn();
+vi.mock('@/core/application/order/use-cases/GetAdminOrdersUseCase', () => {
+  return {
+    GetAdminOrdersUseCase: class {
+      execute = mockGetAdminOrdersExecute;
     },
   };
 });
@@ -374,4 +404,119 @@ describe('order.actions - requestReturnAction', () => {
     expect(result.error).toContain('배송 완료');
   });
 });
+
+describe('order.actions - approveReturnAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('반품 승인 유즈케이스가 성공하면 성공 결과를 반환한다', async () => {
+    mockApproveReturnExecute.mockResolvedValue(
+      ok({
+        orderId: 'order-1',
+        orderNumber: 'ORD-20260924-00001',
+        status: 'RETURNED',
+        returnedAt: new Date(),
+        refundedAmount: 50000,
+        refundedPoints: 3000,
+        refundTransactionId: 'REF_123',
+      })
+    );
+
+    const result = await approveReturnAction({
+      orderId: 'order-1',
+      adminNote: '검수 통과',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.status).toBe('RETURNED');
+    expect(result.data?.refundedAmount).toBe(50000);
+  });
+
+  it('반품 승인 유즈케이스가 실패하면 에러를 반환한다', async () => {
+    mockApproveReturnExecute.mockResolvedValue(
+      fail(new DomainError("반품 요청('RETURN_REQUESTED') 상태의 주문만 반품을 승인할 수 있습니다."))
+    );
+
+    const result = await approveReturnAction({
+      orderId: 'order-1',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('RETURN_REQUESTED');
+  });
+});
+
+describe('order.actions - rejectReturnAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('반품 반려 유즈케이스가 성공하면 성공 결과를 반환한다', async () => {
+    mockRejectReturnExecute.mockResolvedValue(
+      ok({
+        orderId: 'order-1',
+        orderNumber: 'ORD-20260924-00001',
+        status: 'DELIVERED',
+        rejectionReason: '부속품 누락',
+        rejectedAt: new Date(),
+      })
+    );
+
+    const result = await rejectReturnAction({
+      orderId: 'order-1',
+      reason: '부속품 누락',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.status).toBe('DELIVERED');
+    expect(result.data?.rejectionReason).toBe('부속품 누락');
+  });
+
+  it('반품 반려 유즈케이스가 실패하면 에러를 반환한다', async () => {
+    mockRejectReturnExecute.mockResolvedValue(
+      fail(new DomainError('반품 반려 사유는 필수 입력 사항입니다.'))
+    );
+
+    const result = await rejectReturnAction({
+      orderId: 'order-1',
+      reason: '',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('필수 입력');
+  });
+});
+
+describe('order.actions - getAdminOrdersAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('관리자 주문 목록 조회가 성공한다', async () => {
+    mockGetAdminOrdersExecute.mockResolvedValue(
+      ok({
+        orders: [
+          {
+            id: 'order-1',
+            orderNumber: 'ORD-20260924-00001',
+            orderName: '샘플 상품',
+            status: 'RETURN_REQUESTED',
+            totalPaidAmount: 50000,
+          },
+        ],
+        totalCount: 1,
+      })
+    );
+
+    const result = await getAdminOrdersAction({
+      filterType: 'CLAIMS_ALL',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.orders.length).toBe(1);
+    expect(result.data?.orders[0].status).toBe('RETURN_REQUESTED');
+  });
+});
+
 

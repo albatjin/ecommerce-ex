@@ -98,6 +98,13 @@ export class SupabaseOrderRepository implements IOrderRepository {
     if (filter.status) {
       query = query.eq('status', filter.status);
     }
+    if (filter.statuses && filter.statuses.length > 0) {
+      query = query.in('status', filter.statuses);
+    }
+    if (filter.searchQuery && filter.searchQuery.trim()) {
+      const q = filter.searchQuery.trim();
+      query = query.or(`order_number.ilike.%${q}%,recipient_name.ilike.%${q}%`);
+    }
 
     const limit = filter.limit ?? 20;
     const offset = filter.offset ?? 0;
