@@ -104,10 +104,13 @@ export class OrderMapper {
    * Order Aggregate Root를 DB orders 테이블 Insert/Update 객체로 변환
    */
   public static toOrderPersistence(order: Order): OrderInsert {
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const isUuid = (val?: string | null) => Boolean(val && UUID_REGEX.test(val));
+
     return {
       id: order.id,
       order_number: order.orderNumber.value,
-      customer_id: order.customerId ?? null,
+      customer_id: isUuid(order.customerId) ? order.customerId! : null,
       order_name: order.orderName,
       status: order.status,
       total_product_amount: order.totalProductAmount.amount,
@@ -117,7 +120,9 @@ export class OrderMapper {
       total_paid_amount: order.totalPaidAmount.amount,
       payment_method: order.paymentInfo.method,
       payment_status: order.paymentInfo.status,
-      payment_details: (order.paymentInfo.details as unknown as Database['public']['Tables']['orders']['Insert']['payment_details']) ?? null,
+      payment_details: ((order.paymentInfo.details && Object.keys(order.paymentInfo.details).length > 0)
+        ? (order.paymentInfo.details as unknown as Database['public']['Tables']['orders']['Insert']['payment_details'])
+        : ({} as unknown as Database['public']['Tables']['orders']['Insert']['payment_details'])),
       recipient_name: order.shippingAddress.recipientName,
       recipient_phone: order.shippingAddress.recipientPhone,
       shipping_address: order.shippingAddress.address,
@@ -138,11 +143,14 @@ export class OrderMapper {
    * OrderItem 엔티티들을 DB order_items 테이블 Insert 객체 배열로 변환
    */
   public static toItemPersistenceList(orderId: string, items: OrderItem[]): OrderItemInsert[] {
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const isUuid = (val?: string | null) => Boolean(val && UUID_REGEX.test(val));
+
     return items.map((item) => ({
       id: item.id,
       order_id: orderId,
-      product_id: item.productId ?? null,
-      variant_id: item.variantId ?? null,
+      product_id: isUuid(item.productId) ? item.productId! : null,
+      variant_id: isUuid(item.variantId) ? item.variantId! : null,
       product_name: item.productName,
       variant_name: item.variantName ?? null,
       product_image_url: item.productImageUrl ?? null,

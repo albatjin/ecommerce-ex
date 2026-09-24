@@ -104,11 +104,14 @@ describe('OrderMapper', () => {
     expect(orderPersistence.order_number).toBe('ORD-20260924-12345');
     expect(orderPersistence.recipient_name).toBe('이순신');
     expect(orderPersistence.payment_method).toBe('NAVER_PAY');
+    expect(orderPersistence.payment_details).toEqual({});
+    expect(orderPersistence.customer_id).toBeNull(); // 'user-1' is not UUID
 
     const itemPersistenceList = OrderMapper.toItemPersistenceList(order.id, order.items);
     expect(itemPersistenceList).toHaveLength(1);
     expect(itemPersistenceList[0].product_name).toBe('상품 1');
     expect(itemPersistenceList[0].total_price).toBe(50000);
+    expect(itemPersistenceList[0].product_id).toBeNull(); // 'prod-1' is not UUID
   });
 });
 
