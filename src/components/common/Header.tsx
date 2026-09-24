@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingBag, User, Search, Menu } from 'lucide-react';
+import { ShoppingBag, User, Search, Menu, UserPlus, LogOut } from 'lucide-react';
+import { signOutAction } from '@/app/actions/auth.actions';
 
 interface HeaderProps {
   cartItemCount?: number;
@@ -12,21 +13,52 @@ interface HeaderProps {
 export function Header({ cartItemCount = 0, userName, isAdmin = false }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
-      {/* 1. 상단 유틸리티 공지 바 */}
+      {/* 1. 최상단 유틸리티 공지 & 인증 바 */}
       <div className="bg-slate-900 text-slate-300 text-xs py-1.5 px-4 hidden sm:block">
         <div className="container-custom flex justify-between items-center">
           <p className="font-medium tracking-wide">
             🎉 신규 회원 가입 시 <span className="text-amber-400 font-bold">3,000원 웰컴 적립금</span> 즉시 지급!
           </p>
-          <div className="flex items-center gap-4 text-slate-400">
+          <div className="flex items-center gap-3.5 text-slate-400 text-[11px]">
             {isAdmin && (
               <Link href="/admin" className="text-amber-400 hover:text-amber-300 font-semibold">
                 관리자 콘솔
               </Link>
             )}
+
+            {userName ? (
+              <>
+                <span className="text-slate-300 font-medium">
+                  <span className="text-blue-400 font-bold">{userName}</span>님
+                </span>
+                <span className="text-slate-700">|</span>
+                <Link href="/my-page" className="hover:text-white transition-colors">
+                  마이페이지
+                </Link>
+                <span className="text-slate-700">|</span>
+                <form action={signOutAction} className="inline">
+                  <button type="submit" className="hover:text-white transition-colors">
+                    로그아웃
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-slate-300 hover:text-white transition-colors font-medium">
+                  로그인
+                </Link>
+                <span className="text-slate-700">|</span>
+                <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-bold transition-colors">
+                  회원가입
+                </Link>
+              </>
+            )}
+
+            <span className="text-slate-700">|</span>
             <Link href="/support" className="hover:text-white transition-colors">
               고객센터
             </Link>
+            <span className="text-slate-700">|</span>
             <Link href="/my-page/orders" className="hover:text-white transition-colors">
               배송조회
             </Link>
@@ -71,24 +103,45 @@ export function Header({ cartItemCount = 0, userName, isAdmin = false }: HeaderP
           </form>
         </div>
 
-        {/* 우측 유저 액션 버튼들 */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        {/* 우측 유저 액션 버튼들 (로그인, 회원가입, 마이페이지, 장바구니) */}
+        <div className="flex items-center gap-2 sm:gap-2.5">
           {userName ? (
-            <Link
-              href="/my-page"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              <User className="w-4 h-4 text-slate-500" />
-              <span className="hidden sm:inline">{userName}님</span>
-            </Link>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Link
+                href="/my-page"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <User className="w-4 h-4 text-slate-500" />
+                <span className="hidden sm:inline">{userName}님</span>
+              </Link>
+              <form action={signOutAction} className="inline">
+                <button
+                  type="submit"
+                  aria-label="로그아웃"
+                  className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  title="로그아웃"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
           ) : (
-            <Link
-              href="/login"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              <User className="w-4 h-4 text-slate-500" />
-              <span>로그인</span>
-            </Link>
+            <div className="flex items-center gap-1.5">
+              <Link
+                href="/login"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <User className="w-4 h-4 text-slate-500" />
+                <span>로그인</span>
+              </Link>
+              <Link
+                href="/signup"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span className="hidden sm:inline">회원가입</span>
+              </Link>
+            </div>
           )}
 
           {/* 장바구니 아이콘 & 카운트 배지 */}
@@ -130,4 +183,3 @@ export function Header({ cartItemCount = 0, userName, isAdmin = false }: HeaderP
     </header>
   );
 }
-

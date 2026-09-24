@@ -9,14 +9,16 @@ describe('Header Component', () => {
     expect(screen.getByText('Hub')).toBeInTheDocument();
   });
 
-  it('비로그인 상태일 때는 로그인 버튼을 표시한다', () => {
+  it('비로그인 상태일 때는 로그인 및 회원가입 버튼을 표시한다', () => {
     render(<Header userName={null} />);
-    expect(screen.getByText('로그인')).toBeInTheDocument();
+    expect(screen.getAllByText('로그인').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('회원가입').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('로그인 상태일 때는 사용자 이름과 님을 표시한다', () => {
+  it('로그인 상태일 때는 사용자 이름과 님, 그리고 로그아웃을 표시한다', () => {
     render(<Header userName="홍길동" />);
-    expect(screen.getByText('홍길동님')).toBeInTheDocument();
+    expect(screen.getAllByText(/홍길동/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('로그아웃').length).toBeGreaterThanOrEqual(1);
   });
 
   it('장바구니 아이템이 0개일 때는 카운트 배지가 노출되지 않는다', () => {
@@ -39,4 +41,3 @@ describe('Header Component', () => {
     expect(screen.queryByText('관리자 콘솔')).not.toBeInTheDocument();
   });
 });
-
