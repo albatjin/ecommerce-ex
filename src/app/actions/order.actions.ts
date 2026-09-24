@@ -119,8 +119,8 @@ export async function createOrderAction(
     }
 
     revalidatePath('/cart');
-    revalidatePath('/checkout');
     revalidatePath('/my-page');
+    revalidatePath('/my-page/orders');
 
     return {
       success: true,
@@ -171,8 +171,8 @@ export async function approvePaymentAction(
     }
 
     revalidatePath('/cart');
-    revalidatePath('/checkout');
     revalidatePath('/my-page');
+    revalidatePath('/my-page/orders');
 
     return {
       success: true,

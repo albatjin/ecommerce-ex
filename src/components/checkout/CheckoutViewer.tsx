@@ -185,11 +185,16 @@ export function CheckoutViewer({
           return;
         }
 
-        router.push(
-          `/checkout/success?orderNumber=${encodeURIComponent(
-            approveRes.data?.orderNumber || ''
-          )}`
-        );
+        const orderNumber = approveRes.data?.orderNumber || res.data.orderNumber;
+        const targetUrl = `/checkout/success?orderNumber=${encodeURIComponent(orderNumber)}`;
+        router.push(targetUrl);
+        if (typeof window !== 'undefined') {
+          setTimeout(() => {
+            if (window.location.pathname !== '/checkout/success') {
+              window.location.href = targetUrl;
+            }
+          }, 300);
+        }
       }
     } catch (err) {
       setErrorMessage(
