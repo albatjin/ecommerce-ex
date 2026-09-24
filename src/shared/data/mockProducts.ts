@@ -743,3 +743,4 @@ export function getMockProductDetail(id: string): ProductDetailDTO | null {
     updatedAt: product.createdAt,
   };
 }
+
