@@ -125,3 +125,4 @@ describe('Inquiry UseCases (Stage 31)', () => {
     });
   });
 });
+

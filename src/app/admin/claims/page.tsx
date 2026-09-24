@@ -20,10 +20,8 @@ export default async function AdminClaimsPage() {
   const totalCount = result.data?.totalCount || orders.length;
 
   return (
-    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <AdminClaimsViewer initialOrders={orders} totalCount={totalCount} />
-      </div>
+    <div className="max-w-5xl mx-auto space-y-6">
+      <AdminClaimsViewer initialOrders={orders} totalCount={totalCount} />
     </div>
   );
 }

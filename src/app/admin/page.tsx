@@ -33,8 +33,7 @@ export default async function AdminDashboardPage() {
   const pendingInquiries = inquiries.filter((i) => i.status === 'PENDING').length;
 
   return (
-    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-8">
         {/* 헤더 배너 */}
         <div className="p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
@@ -134,6 +133,5 @@ export default async function AdminDashboardPage() {
           </Link>
         </div>
       </div>
-    </div>
   );
 }

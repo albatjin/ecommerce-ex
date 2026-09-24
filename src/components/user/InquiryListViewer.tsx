@@ -383,3 +383,4 @@ export function InquiryListViewer({ initialInquiries }: InquiryListViewerProps) 
     </div>
   );
 }
+

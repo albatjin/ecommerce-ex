@@ -141,3 +141,4 @@ export class Inquiry extends Entity<InquiryProps> {
     return ok(inquiry);
   }
 }
+

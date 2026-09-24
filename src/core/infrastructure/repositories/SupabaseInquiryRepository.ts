@@ -160,3 +160,4 @@ export class SupabaseInquiryRepository implements IInquiryRepository {
     ).getValue();
   }
 }
+

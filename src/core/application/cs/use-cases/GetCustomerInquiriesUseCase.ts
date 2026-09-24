@@ -33,3 +33,4 @@ export class GetCustomerInquiriesUseCase {
     return ok(dtoList);
   }
 }
+

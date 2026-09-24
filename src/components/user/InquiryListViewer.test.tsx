@@ -135,3 +135,4 @@ describe('InquiryListViewer Component', () => {
     });
   });
 });
+

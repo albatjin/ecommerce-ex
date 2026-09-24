@@ -117,3 +117,4 @@ describe('AdminInquiriesViewer Component', () => {
     });
   });
 });
+

@@ -14,3 +14,4 @@ export interface IInquiryRepository {
   findMany(filter?: FindInquiriesFilter): Promise<{ inquiries: Inquiry[]; totalCount: number }>;
   save(inquiry: Inquiry): Promise<void>;
 }
+
