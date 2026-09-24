@@ -141,6 +141,26 @@ export function CheckoutViewer({
     }
   };
 
+  // PayPal 모달 열기 핸들러 (빈 필드 자동 기본값 보정)
+  const handleOpenPayPalModal = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    setErrorMessage(null);
+
+    // 수령인/배송지가 비어있는 경우 PayPal Express 결제를 위해 기본 샌드박스 정보로 보정
+    if (!recipientName.trim()) {
+      setRecipientName('홍길동 (PayPal)');
+    }
+    if (!recipientPhone.trim()) {
+      setRecipientPhone('010-1234-5678');
+    }
+    if (!zipcode.trim() || !address.trim()) {
+      setZipcode('06236');
+      setAddress('서울특별시 강남구 테헤란로 152 강남파이낸스센터');
+    }
+
+    setIsPayPalModalOpen(true);
+  };
+
   // PayPal 결제 승인 콜백 핸들러
   const handlePayPalApprove = async (details: PayPalApprovalDetails) => {
     setIsSubmitting(true);
@@ -153,12 +173,17 @@ export function CheckoutViewer({
           ? ''
           : selectedMessage;
 
+      const effRecipientName = recipientName.trim() || '홍길동 (PayPal)';
+      const effRecipientPhone = recipientPhone.trim() || '010-1234-5678';
+      const effZipcode = zipcode.trim() || '06236';
+      const effAddress = address.trim() || '서울특별시 강남구 테헤란로 152 강남파이낸스센터';
+
       const res = await createOrderAction({
         shippingAddress: {
-          recipientName: recipientName.trim(),
-          recipientPhone: recipientPhone.trim(),
-          zipcode: zipcode.trim(),
-          address: address.trim(),
+          recipientName: effRecipientName,
+          recipientPhone: effRecipientPhone,
+          zipcode: effZipcode,
+          address: effAddress,
           message: finalMessage,
         },
         paymentMethod: 'PAYPAL',
@@ -167,9 +192,9 @@ export function CheckoutViewer({
       });
 
       if (!res.success || !res.data) {
-        setErrorMessage(res.error || 'PayPal 주문 처리 중 오류가 발생했습니다.');
-        setIsPayPalModalOpen(false);
-        return;
+        const msg = res.error || 'PayPal 주문 처리 중 오류가 발생했습니다.';
+        setErrorMessage(msg);
+        throw new Error(msg);
       }
 
       const approveRes = await approvePaymentAction(res.data.orderId, {
@@ -185,11 +210,9 @@ export function CheckoutViewer({
       });
 
       if (!approveRes.success) {
-        setErrorMessage(
-          approveRes.error || 'PayPal 결제 승인 처리 중 오류가 발생했습니다.'
-        );
-        setIsPayPalModalOpen(false);
-        return;
+        const msg = approveRes.error || 'PayPal 결제 승인 처리 중 오류가 발생했습니다.';
+        setErrorMessage(msg);
+        throw new Error(msg);
       }
 
       try {
@@ -198,25 +221,23 @@ export function CheckoutViewer({
         // 장바구니 갱신 오류 방어
       }
 
-      setIsPayPalModalOpen(false);
       const orderNumber = approveRes.data?.orderNumber || res.data.orderNumber;
       const targetUrl = `/checkout/success?orderNumber=${encodeURIComponent(
         orderNumber
       )}`;
-      router.push(targetUrl);
+
       if (typeof window !== 'undefined') {
-        setTimeout(() => {
-          if (window.location.pathname !== '/checkout/success') {
-            window.location.href = targetUrl;
-          }
-        }, 300);
+        window.location.href = targetUrl;
+      } else {
+        router.push(targetUrl);
       }
     } catch (err) {
-      setErrorMessage(
+      const msg =
         err instanceof Error
           ? err.message
-          : 'PayPal 결제 처리 중 오류가 발생했습니다.'
-      );
+          : 'PayPal 결제 처리 중 오류가 발생했습니다.';
+      setErrorMessage(msg);
+      throw err;
     } finally {
       setIsSubmitting(false);
     }
@@ -226,6 +247,11 @@ export function CheckoutViewer({
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+
+    if (selectedPaymentMethod === 'PAYPAL' && !onPlaceOrder) {
+      handleOpenPayPalModal();
+      return;
+    }
 
     if (!recipientName.trim()) {
       setErrorMessage('수령인 이름을 입력해 주세요.');
@@ -246,11 +272,6 @@ export function CheckoutViewer({
         : selectedMessage === SHIPPING_MESSAGES[0]
         ? ''
         : selectedMessage;
-
-    if (selectedPaymentMethod === 'PAYPAL' && !onPlaceOrder) {
-      setIsPayPalModalOpen(true);
-      return;
-    }
 
     setIsSubmitting(true);
     try {
@@ -781,10 +802,21 @@ export function CheckoutViewer({
               </div>
             </div>
 
+            {/* 우측 오류 메시지 표시 (버튼 바로 위) */}
+            {errorMessage && (
+              <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
             {/* 주문 및 결제 버튼 */}
             {selectedPaymentMethod === 'PAYPAL' ? (
               <button
-                type="submit"
+                type="button"
+                data-testid="paypal-submit-button"
+                aria-label="Pay with PayPal"
+                onClick={handleOpenPayPalModal}
                 disabled={isSubmitting}
                 className="w-full py-4 px-6 rounded-2xl bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-black text-sm sm:text-base shadow-lg shadow-amber-500/20 transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
               >

@@ -41,6 +41,7 @@ export function PayPalCheckoutModal({
   orderName,
 }: PayPalCheckoutModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -50,6 +51,7 @@ export function PayPalCheckoutModal({
   const amountUSD = Number((amountKRW / EXCHANGE_RATE).toFixed(2));
 
   const handleConfirmPayment = async () => {
+    if (isProcessing || isSuccess) return;
     setIsProcessing(true);
     setError(null);
     try {
@@ -63,11 +65,12 @@ export function PayPalCheckoutModal({
         orderId: mockPaypalOrderId,
         payerId: mockPayerId,
         payerEmail: 'customer@paypal-sandbox.com',
-        payerName: recipientName || 'Verified PayPal Customer',
+        payerName: recipientName || '홍길동 (PayPal 인증 구매자)',
         usdAmount: amountUSD,
         exchangeRate: EXCHANGE_RATE,
         approvedAt: new Date().toISOString(),
       });
+      setIsSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'PayPal 결제 승인 중 오류가 발생했습니다.');
       setIsProcessing(false);
@@ -192,14 +195,19 @@ export function PayPalCheckoutModal({
           <div className="pt-2 space-y-2">
             <button
               type="button"
-              disabled={isProcessing}
+              disabled={isProcessing || isSuccess}
               onClick={handleConfirmPayment}
               className="w-full py-4 px-6 rounded-2xl bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-black text-base shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isProcessing ? (
+              {isSuccess ? (
+                <>
+                  <CheckCircle2 className="w-5 h-5 text-emerald-700" />
+                  <span>결제 승인 완료! 페이지 이동 중...</span>
+                </>
+              ) : isProcessing ? (
                 <>
                   <span className="w-5 h-5 border-2 border-[#003087]/30 border-t-[#003087] rounded-full animate-spin" />
-                  <span>PayPal 승인 처리 중...</span>
+                  <span>PayPal 승인 및 주문 처리 중...</span>
                 </>
               ) : (
                 <>
@@ -212,9 +220,9 @@ export function PayPalCheckoutModal({
 
             <button
               type="button"
-              disabled={isProcessing}
+              disabled={isProcessing || isSuccess}
               onClick={onClose}
-              className="w-full py-2.5 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-semibold transition-colors cursor-pointer"
+              className="w-full py-2.5 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-semibold transition-colors cursor-pointer disabled:opacity-40"
             >
               결제 취소하고 주문서로 돌아가기
             </button>

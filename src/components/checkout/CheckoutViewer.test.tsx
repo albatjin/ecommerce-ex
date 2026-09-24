@@ -125,8 +125,21 @@ describe('CheckoutViewer Component', () => {
     const submitBtn = screen.getByRole('button', { name: /결제하기/ });
     fireEvent.click(submitBtn);
 
-    expect(screen.getByText(/수령인 이름을 입력해 주세요/)).toBeInTheDocument();
+    expect(screen.getAllByText(/수령인 이름을 입력해 주세요/)[0]).toBeInTheDocument();
     expect(onPlaceOrderMock).not.toHaveBeenCalled();
+  });
+
+  it('PayPal 결제 수단 선택 후 Pay with PayPal 버튼 클릭 시 PayPal 승인 모달이 열린다', () => {
+    render(<CheckoutViewer initialData={sampleData} />);
+
+    const paypalTab = screen.getByRole('button', { name: /PayPal \(페이팔\)/ });
+    fireEvent.click(paypalTab);
+
+    const paypalBtn = screen.getByTestId('paypal-submit-button');
+    fireEvent.click(paypalBtn);
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText(/TLS 1.3 암호화/)).toBeInTheDocument();
   });
 
   it('정상 입력 후 결제하기를 누르면 onPlaceOrder 콜백이 올바른 파라미터로 호출된다', async () => {
