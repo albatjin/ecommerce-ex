@@ -1,3 +1,2 @@
 // Clean Architecture: Domain Layer Entry
-export {};
-
+export * from './shared';
