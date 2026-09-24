@@ -65,6 +65,7 @@ describe('ApprovePaymentUseCase', () => {
 
     mockPaymentGateway = {
       requestPayment: vi.fn(),
+      refundPayment: vi.fn(),
     };
 
     mockProductRepo = {

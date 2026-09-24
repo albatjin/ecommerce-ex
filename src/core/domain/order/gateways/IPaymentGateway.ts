@@ -20,6 +20,21 @@ export interface PaymentApprovalResult {
   rawDetails: Record<string, unknown>;
 }
 
+export interface PaymentRefundParams {
+  orderId: string;
+  orderNumber: string;
+  transactionId?: string;
+  amount: number;
+  reason?: string;
+}
+
+export interface PaymentRefundResult {
+  refundId: string;
+  refundedAt: Date;
+  amount: number;
+  rawDetails: Record<string, unknown>;
+}
+
 /**
  * 결제 게이트웨이(PG) 어댑터 인터페이스 (Clean Architecture Port)
  */
@@ -27,5 +42,8 @@ export interface IPaymentGateway {
   requestPayment(
     params: PaymentRequestParams
   ): Promise<Result<PaymentApprovalResult, DomainError>>;
+  refundPayment(
+    params: PaymentRefundParams
+  ): Promise<Result<PaymentRefundResult, DomainError>>;
 }
 

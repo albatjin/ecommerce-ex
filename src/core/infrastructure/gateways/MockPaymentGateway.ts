@@ -4,6 +4,8 @@ import type {
   IPaymentGateway,
   PaymentRequestParams,
   PaymentApprovalResult,
+  PaymentRefundParams,
+  PaymentRefundResult,
 } from '@/core/domain/order/gateways/IPaymentGateway';
 
 export interface MockPaymentGatewayOptions {
@@ -72,6 +74,38 @@ export class MockPaymentGateway implements IPaymentGateway {
         customerName: params.customerName,
         customerEmail: params.customerEmail || null,
         ...params.paymentDetails,
+      },
+    });
+  }
+
+  public async refundPayment(
+    params: PaymentRefundParams
+  ): Promise<Result<PaymentRefundResult, DomainError>> {
+    if (this.shouldFail) {
+      return fail(
+        new DomainError(
+          this.failureReason || '가상 PG 결제 취소/환불 처리가 거절되었습니다.'
+        )
+      );
+    }
+
+    if (params.amount < 0) {
+      return fail(new DomainError('환불 금액은 0원 이상이어야 합니다.'));
+    }
+
+    const randomHex = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const refundId = `REF_${Date.now()}_${randomHex}`;
+
+    return ok({
+      refundId,
+      refundedAt: new Date(),
+      amount: params.amount,
+      rawDetails: {
+        gateway: 'MockPaymentGateway',
+        transactionId: params.transactionId || null,
+        orderId: params.orderId,
+        orderNumber: params.orderNumber,
+        reason: params.reason || '고객 주문 취소 요청',
       },
     });
   }
