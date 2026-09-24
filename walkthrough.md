@@ -1,4 +1,4 @@
-# Stage 1 ~ 6 완료 보고서
+# Stage 1 ~ 7 완료 보고서
 
 ## [Part 1 총괄 요약]
 - **Stage 1**: Next.js 16 + React 19 + Tailwind CSS v4 환경 구축, Clean Architecture 4계층 디렉토리 및 Vitest 파이프라인 가동
@@ -9,46 +9,59 @@
 
 ---
 
-## [Stage 6] User 도메인 엔티티 & IUserRepository 인터페이스 정의 (Part 2 회원 & 인증 시작)
+## [Stage 6] User 도메인 엔티티 & IUserRepository 인터페이스 정의
+- `User` 엔티티 (5단계 회원 등급 자동 승급 규칙, 적립금 원장 검증, 프로필 수정 불변식 등)
+- `IUserRepository` 추상 인터페이스 정의
+- 단위 테스트 70개 통과
+
+---
+
+## [Stage 7] SupabaseUserRepository 구현 & UserMapper 데이터 변환
 
 ### 1. 구현 요약
-Clean Architecture의 Domain 계층에 회원(`User`)의 핵심 비즈니스 규칙과 영속성 추상화 인터페이스를 완성했습니다.
+Clean Architecture의 Infrastructure 계층에 `IUserRepository`를 온전히 구현하고, 영속성 DB Row와 순수 Domain Entity 간의 양방향 데이터 변환 계층을 완성했습니다.
 
-#### 1) `User` 도메인 엔티티 ([`User.ts`](file:///d:/Data/Antigravity/ecommerce-ex/src/core/domain/user/User.ts))
-- Base `Entity<UserProps>` 상속 및 불변 식별자/프로퍼티 캡슐화
-- **비즈니스 메서드 및 정책**:
-  - `updateProfile()`: 이름 필수 검증, 연락처, 개인통관고유부호, 기본 배송지/우편번호 갱신
-  - `updateMarketingConsent()`: SMS, 이메일, 앱 푸시 알림 수신 동의 변경
-  - `addRewardPoints()` / `useRewardPoints()`: 포인트 적립 및 잔액 부족 시 `DomainError` 방어
-  - `recordOrderPayment()` & `recalculateMembershipGrade()`: 주문 결제 누적 실적 반영 및 자동 승급 정책 (BRONZE -> SILVER 10만 -> GOLD 30만 -> VIP 100만 -> VVIP 300만)
-  - `isAdmin()`: `super_admin`, `admin`, `manager`, `staff` 권한 판별
-  - `User.create()`: 도메인 불변식을 검증하는 정적 팩토리 메서드
+#### 1) `UserMapper` ([`UserMapper.ts`](file:///d:/Data/Antigravity/ecommerce-ex/src/core/infrastructure/mappers/UserMapper.ts))
+- `toDomain(row: UserRow)`: DB Row를 엄격한 도메인 불변식을 통과하는 `User` 엔티티로 변환
+- `toPersistence(user: User)`: 신규 등록용 `UserInsert` 데이터 변환
+- `toUpdatePersistence(user: User)`: 수정 전용 `UserUpdate` 데이터 변환 (`id` 제외)
 
-#### 2) `IUserRepository` 추상 인터페이스 ([`IUserRepository.ts`](file:///d:/Data/Antigravity/ecommerce-ex/src/core/domain/user/IUserRepository.ts))
-- `findById()`, `findByEmail()`, `findByCustomerNumber()`, `findMany()` (페이징/필터링), `save()`, `update()`, `delete()` 메서드 규격 정의
+#### 2) `SupabaseUserRepository` ([`SupabaseUserRepository.ts`](file:///d:/Data/Antigravity/ecommerce-ex/src/core/infrastructure/repositories/SupabaseUserRepository.ts))
+- `IUserRepository` 인터페이스 구현
+- Next.js 16 비동기 `getServerClient()` 자동 주입 및 테스트용 Mock 클라이언트 의존성 주입 지원
+- 주요 메서드:
+  - `findById(id)`
+  - `findByEmail(email)`
+  - `findByCustomerNumber(customerNumber)`
+  - `findMany(options)` (등급, 역할, 상태 필터링 및 이름/이메일/고객번호 복합 검색, 페이징 지원)
+  - `save(user)`
+  - `update(user)` (수정 대상 없을 시 `NotFoundError` 방어)
+  - `delete(id)`
 
 ---
 
 ### 2. 검증 결과
 
-#### 1) 단위 테스트 (Vitest: 70 tests passed)
+#### 1) 단위 테스트 (Vitest: 78 tests passed)
 ```bash
 > npm test
  ✓ src/core/infrastructure/supabase/supabase.test.ts (5 tests)
- ✓ src/core/domain/shared/AppError.test.ts (7 tests)
  ✓ src/core/domain/shared/Result.test.ts (9 tests)
+ ✓ src/core/domain/shared/AppError.test.ts (7 tests)
  ✓ src/core/domain/user/User.test.ts (13 tests)
- ✓ src/shared/utils/cn.test.ts (5 tests)
- ✓ src/core/domain/shared/ValueObject.test.ts (4 tests)
- ✓ src/core/application/auth/route-guard.test.ts (10 tests)
+ ✓ src/core/infrastructure/mappers/UserMapper.test.ts (3 tests)
  ✓ src/core/domain/shared/Entity.test.ts (5 tests)
+ ✓ src/core/application/auth/route-guard.test.ts (10 tests)
  ✓ src/core/infrastructure/supabase/supabase-browser.test.ts (2 tests)
+ ✓ src/core/infrastructure/repositories/SupabaseUserRepository.test.ts (5 tests)
  ✓ src/components/common/Footer.test.tsx (3 tests)
  ✓ src/components/common/Header.test.tsx (7 tests)
+ ✓ src/core/domain/shared/ValueObject.test.ts (4 tests)
+ ✓ src/shared/utils/cn.test.ts (5 tests)
 
- Test Files  11 passed (11)
-      Tests  70 passed (70)
-   Duration  1.73s
+ Test Files  13 passed (13)
+      Tests  78 passed (78)
+   Duration  2.42s
 ```
 
 #### 2) TypeScript 컴파일 검증
@@ -61,13 +74,15 @@ Clean Architecture의 Domain 계층에 회원(`User`)의 핵심 비즈니스 규
 ```bash
 > npm run build
 ▲ Next.js 16.3.5 (Turbopack)
-✓ Compiled successfully in 3.6s
+✓ Compiled successfully in 3.2s
 ```
 
 ---
 
-## 3. 다음 단계 안내: Stage 7 착수
-- **Stage 7 주제**: Supabase 기반 `SupabaseUserRepository` 구현 (Infrastructure)
-- `IUserRepository`를 구현하는 `src/core/infrastructure/repositories/SupabaseUserRepository.ts` 구축
-- DB Row ↔ Domain Entity 매퍼(`UserMapper.ts`) 구현
-- Supabase SSR Client 연동 및 Repository 단위 테스트 작성/통과 검증
+## 3. 다음 단계 안내: Stage 8 착수
+- **Stage 8 주제**: 회원가입 & 이메일/비밀번호 로그인 Use Cases 및 Server Actions 구현
+- `SignUpUseCase.ts` (이메일 중복 체크, Supabase Auth 계정 생성 및 public.users 동기화)
+- `SignInUseCase.ts` (자격 증명 검증 및 세션 쿠키 발급)
+- `SignOutUseCase.ts` (세션 종료)
+- Next.js Server Actions (`src/app/actions/auth.actions.ts`)
+- Use Case 단위 테스트 작성 및 통과 검증
