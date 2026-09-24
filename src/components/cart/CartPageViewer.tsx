@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useCart } from './CartContext';
 import { FreeShippingGauge } from './FreeShippingGauge';
+import { CheckoutStepIndicator } from '../common';
 
 export function CartPageViewer() {
   const {
@@ -76,6 +77,9 @@ export function CartPageViewer() {
 
   return (
     <div className="container-custom py-8 sm:py-12">
+      {/* 0. 주문 진행 단계 인디케이터 (Step 1: 장바구니) */}
+      <CheckoutStepIndicator currentStep="cart" />
+
       {/* 1. 상단 타이틀 */}
       <div className="flex items-baseline justify-between mb-8">
         <div className="flex items-center gap-3">

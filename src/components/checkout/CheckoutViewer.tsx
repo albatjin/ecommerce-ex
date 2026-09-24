@@ -22,6 +22,7 @@ import type {
   CheckoutShippingInput,
 } from '@/core/application/order/dtos/CheckoutDTO';
 import { createOrderAction, approvePaymentAction } from '@/app/actions/order.actions';
+import { CheckoutStepIndicator } from '../common';
 
 interface CheckoutViewerProps {
   initialData: CheckoutDataDTO;
@@ -207,6 +208,9 @@ export function CheckoutViewer({
 
   return (
     <div className="container-custom py-8 sm:py-12">
+      {/* 0. 주문 진행 단계 인디케이터 (Step 2: 주문/결제) */}
+      <CheckoutStepIndicator currentStep="checkout" />
+
       {/* 1. 상단 브레드크럼 & 타이틀 */}
       <nav
         className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-6"

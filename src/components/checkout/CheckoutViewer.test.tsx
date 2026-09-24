@@ -59,7 +59,7 @@ describe('CheckoutViewer Component', () => {
   it('배송지, 주문 품목, 결제 수단, 결제 요약 카드를 정상 렌더링한다', () => {
     render(<CheckoutViewer initialData={sampleData} />);
 
-    expect(screen.getByText('주문 / 결제')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '주문 / 결제', level: 1 })).toBeInTheDocument();
     expect(screen.getByText(/주문 상품 목록/)).toBeInTheDocument();
     expect(screen.getByText('캐시미어 코트')).toBeInTheDocument();
     expect(screen.getByDisplayValue('홍길동')).toBeInTheDocument();

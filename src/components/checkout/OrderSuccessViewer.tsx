@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import type { OrderDetailDTO } from '@/core/application/order/dtos/OrderDTO';
+import { CheckoutStepIndicator } from '../common';
 
 interface OrderSuccessViewerProps {
   order: OrderDetailDTO;
@@ -41,6 +42,9 @@ export function OrderSuccessViewer({ order }: OrderSuccessViewerProps) {
 
   return (
     <div className="container-custom py-10 sm:py-16 max-w-4xl mx-auto space-y-8">
+      {/* 0. 주문 진행 단계 인디케이터 (Step 3: 주문 완료) */}
+      <CheckoutStepIndicator currentStep="success" />
+
       {/* 1. 상단 축하 배너 */}
       <div className="text-center space-y-4 p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950/40 dark:to-slate-900 border border-emerald-100 dark:border-emerald-900/60 shadow-sm">
         <div className="w-20 h-20 mx-auto rounded-3xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25">
