@@ -37,3 +37,4 @@ export interface PromotionCalculationResultDTO {
     discountAmount: number;
   } | null;
 }
+

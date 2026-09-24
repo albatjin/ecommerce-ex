@@ -114,3 +114,4 @@ describe('promotion.actions (Server Actions)', () => {
     expect(result.data?.expectedRewardPoints).toBe(330);
   });
 });
+
