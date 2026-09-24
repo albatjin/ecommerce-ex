@@ -22,6 +22,7 @@ import type {
   CheckoutShippingInput,
 } from '@/core/application/order/dtos/CheckoutDTO';
 import { createOrderAction, approvePaymentAction } from '@/app/actions/order.actions';
+import { useCart } from '@/components/cart/CartContext';
 import { CheckoutStepIndicator } from '../common';
 
 interface CheckoutViewerProps {
@@ -48,6 +49,7 @@ export function CheckoutViewer({
   onPlaceOrder,
 }: CheckoutViewerProps) {
   const router = useRouter();
+  const { refreshCart } = useCart();
 
   // 1. 배송지 상태
   const [recipientName, setRecipientName] = useState(
@@ -184,6 +186,13 @@ export function CheckoutViewer({
         if (!approveRes.success) {
           setErrorMessage(approveRes.error || '결제 승인 처리 중 오류가 발생했습니다.');
           return;
+        }
+
+        // 결제 완료 후 클라이언트 장바구니 전역 상태 즉시 갱신
+        try {
+          await refreshCart();
+        } catch {
+          // 장바구니 갱신 오류가 성공 페이지 이동을 차단하지 않도록 방어
         }
 
         const orderNumber = approveRes.data?.orderNumber || res.data.orderNumber;

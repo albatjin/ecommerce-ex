@@ -259,19 +259,28 @@ export class CreateOrderUseCase {
     await this.orderRepo.save(order);
 
     // 11-5. 장바구니에서 구매 품목 제거
-    const cartTargetId = input.cartId || input.customerId;
-    if (this.cartRepo && cartTargetId) {
-      try {
-        const cart = await this.cartRepo.getCart(cartTargetId);
-        for (const itemInput of input.items) {
-          const cartItem = cart.items.find((i) => i.productId === itemInput.productId);
-          if (cartItem) {
-            cart.removeItem(cartItem.id);
+    if (this.cartRepo) {
+      const targets = new Set<string>();
+      if (input.cartId) targets.add(input.cartId);
+      if (input.customerId) targets.add(input.customerId);
+
+      for (const targetId of targets) {
+        try {
+          const cart = await this.cartRepo.getCart(targetId);
+          for (const itemInput of input.items) {
+            const cartItem = cart.items.find(
+              (i) =>
+                i.productId === itemInput.productId &&
+                (!itemInput.variantId || i.variantId === itemInput.variantId)
+            );
+            if (cartItem) {
+              cart.removeItem(cartItem.id);
+            }
           }
+          await this.cartRepo.saveCart(cart);
+        } catch {
+          // 장바구니 정리 실패가 주문 생성을 방해하지 않도록 방어
         }
-        await this.cartRepo.saveCart(cart);
-      } catch {
-        // 장바구니 정리 실패가 주문 생성을 방해하지 않도록 방어
       }
     }
 

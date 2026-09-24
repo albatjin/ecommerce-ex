@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   CheckCircle2,
@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import type { OrderDetailDTO } from '@/core/application/order/dtos/OrderDTO';
+import { useCart } from '@/components/cart/CartContext';
 import { CheckoutStepIndicator } from '../common';
 
 interface OrderSuccessViewerProps {
@@ -21,6 +22,11 @@ interface OrderSuccessViewerProps {
 
 export function OrderSuccessViewer({ order }: OrderSuccessViewerProps) {
   const [copied, setCopied] = useState(false);
+  const { refreshCart } = useCart();
+
+  useEffect(() => {
+    refreshCart();
+  }, [refreshCart]);
 
   const handleCopyOrderNumber = async () => {
     try {

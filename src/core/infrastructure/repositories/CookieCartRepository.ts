@@ -101,7 +101,9 @@ export class CookieCartRepository implements ICartRepository {
   public async saveCart(cart: Cart): Promise<void> {
     try {
       const cookieStore = await this.getCookieStore();
-      const cookieName = this.getCookieName(cart.id);
+      const keysToSave = new Set<string>();
+      if (cart.id) keysToSave.add(cart.id);
+      if (cart.userId) keysToSave.add(cart.userId);
 
       const serialized: SerializedCart = {
         id: cart.id,
@@ -121,12 +123,16 @@ export class CookieCartRepository implements ICartRepository {
         updatedAt: cart.updatedAt.toISOString(),
       };
 
-      cookieStore.set(cookieName, JSON.stringify(serialized), {
-        path: '/',
-        httpOnly: false,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-      });
+      const serializedStr = JSON.stringify(serialized);
+
+      for (const key of keysToSave) {
+        cookieStore.set(this.getCookieName(key), serializedStr, {
+          path: '/',
+          httpOnly: false,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 30, // 30 days
+        });
+      }
     } catch (error) {
       console.error('Failed to save cart to cookies:', error);
     }

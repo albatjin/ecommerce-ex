@@ -43,3 +43,4 @@ describe('CheckoutStepIndicator Component', () => {
     expect(stepElements[2]).toHaveAttribute('aria-current', 'step');
   });
 });
+
