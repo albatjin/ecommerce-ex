@@ -64,3 +64,4 @@ describe('CartItem Entity', () => {
     expect(item.selected).toBe(true);
   });
 });
+

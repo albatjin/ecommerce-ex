@@ -125,3 +125,4 @@ export class CartItem extends Entity<CartItemProps> {
     return ok(item);
   }
 }
+

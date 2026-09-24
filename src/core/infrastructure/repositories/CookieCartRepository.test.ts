@@ -100,3 +100,4 @@ describe('CookieCartRepository', () => {
     expect(mockStore.delete).toHaveBeenCalledWith(`${CART_COOKIE_KEY_PREFIX}cart_1`);
   });
 });
+

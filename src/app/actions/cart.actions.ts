@@ -18,7 +18,7 @@ export interface CartActionResult {
   error?: string;
 }
 
-export const CART_SESSION_COOKIE = 'ecommerce_guest_token';
+const CART_SESSION_COOKIE = 'ecommerce_guest_token';
 
 /**
  * 현재 세션의 장바구니 식별자(회원 ID 또는 게스트 토큰)를 안전하게 획득합니다.
@@ -221,3 +221,4 @@ export async function mergeCartAction(guestToken: string): Promise<CartActionRes
     };
   }
 }
+

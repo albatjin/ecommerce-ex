@@ -192,3 +192,4 @@ export class Cart extends Entity<CartProps> {
     return ok(cart);
   }
 }
+

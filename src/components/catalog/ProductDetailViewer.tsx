@@ -19,6 +19,7 @@ import type {
   ProductDetailDTO,
   ProductVariantDetailDTO,
 } from '@/core/application/catalog/dtos/ProductDetailDTO';
+import { useCart } from '@/components/cart/CartContext';
 
 interface ProductDetailViewerProps {
   product: ProductDetailDTO;
@@ -49,6 +50,7 @@ export function ProductDetailViewer({
   const [quantity, setQuantity] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<'desc' | 'shipping'>('desc');
   const [addedAlert, setAddedAlert] = useState(false);
+  const { addToCart } = useCart();
 
   // 재고 및 주문 가능 여부
   const currentStock = selectedVariant
@@ -75,11 +77,24 @@ export function ProductDetailViewer({
   const totalPrice = unitPrice * quantity;
   const rewardPointsEarn = Math.floor(totalPrice * 0.01); // 1% 적립금
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (isOutOfStock) return;
     if (onAddToCart) {
       onAddToCart(product.id, selectedVariant?.id, quantity);
     }
+    await addToCart(
+      {
+        productId: product.id,
+        variantId: selectedVariant?.id ?? null,
+        productName: product.nameKo,
+        variantName: selectedVariant?.variantName ?? null,
+        price: unitPrice,
+        quantity,
+        coverImageUrl: selectedImage || null,
+        shippingFee: product.shippingFee,
+      },
+      true
+    );
     setAddedAlert(true);
     setTimeout(() => setAddedAlert(false), 3000);
   };

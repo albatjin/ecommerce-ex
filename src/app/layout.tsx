@@ -1,10 +1,13 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Header, Footer } from '@/components/common';
+import { CartProvider, CartDrawer } from '@/components/cart';
 import { getServerClient } from '@/core/infrastructure/supabase/server';
 import { getCategoryTreeAction } from '@/app/actions/catalog.actions';
+import { getCartAction } from '@/app/actions/cart.actions';
 import type { UserRole } from '@/shared/types/database.types';
 import type { CategoryTreeNode } from '@/core/application/catalog/dtos/CategoryTreeDTO';
+import type { CartDTO } from '@/core/application/cart/dtos/CartDTO';
 
 export const metadata: Metadata = {
   title: 'CommerceHub | 프리미엄 이커머스 셀렉트숍',
@@ -19,6 +22,7 @@ export default async function RootLayout({
   let userName: string | null = null;
   let isAdmin = false;
   let categories: CategoryTreeNode[] = [];
+  let initialCart: CartDTO | null = null;
 
   try {
     const supabase = await getServerClient();
@@ -32,9 +36,16 @@ export default async function RootLayout({
       isAdmin = ['super_admin', 'admin', 'manager', 'staff'].includes(role);
     }
 
-    const categoryResult = await getCategoryTreeAction();
+    const [categoryResult, cartResult] = await Promise.all([
+      getCategoryTreeAction(),
+      getCartAction(),
+    ]);
+
     if (categoryResult.success && categoryResult.data) {
       categories = categoryResult.data;
+    }
+    if (cartResult.success && cartResult.data) {
+      initialCart = cartResult.data;
     }
   } catch {
     // SSR 초기 렌더링 중 오류 발생 시 안전하게 기본값으로 폴백
@@ -43,11 +54,17 @@ export default async function RootLayout({
   return (
     <html lang="ko">
       <body className="antialiased flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-        <Header userName={userName} isAdmin={isAdmin} cartItemCount={0} categories={categories} />
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
+        <CartProvider initialCart={initialCart}>
+          <Header
+            userName={userName}
+            isAdmin={isAdmin}
+            categories={categories}
+            cartItemCount={initialCart?.totalItemCount ?? 0}
+          />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <CartDrawer />
+        </CartProvider>
       </body>
     </html>
   );

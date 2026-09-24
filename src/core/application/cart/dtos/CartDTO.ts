@@ -59,3 +59,4 @@ export interface MergeCartInput {
   guestCartId: string;
   userCartId: string;
 }
+

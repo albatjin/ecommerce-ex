@@ -20,3 +20,4 @@ export interface ICartRepository {
    */
   clearCart(cartIdOrUserId: string): Promise<void>;
 }
+

@@ -120,3 +120,4 @@ describe('cart.actions (Server Actions)', () => {
     expect(toggleResult.data?.totalProductAmount).toBe(0);
   });
 });
+
