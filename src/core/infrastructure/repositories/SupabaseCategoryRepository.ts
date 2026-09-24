@@ -118,3 +118,4 @@ export class SupabaseCategoryRepository implements ICategoryRepository {
     }
   }
 }
+

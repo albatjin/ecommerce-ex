@@ -129,3 +129,4 @@ describe('SupabaseCategoryRepository', () => {
     expect(deleteMock).toHaveBeenCalled();
   });
 });
+

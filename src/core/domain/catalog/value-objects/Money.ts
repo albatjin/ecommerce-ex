@@ -82,3 +82,4 @@ export class Money extends ValueObject<MoneyProps> {
     }
   }
 }
+

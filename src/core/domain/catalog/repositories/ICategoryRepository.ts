@@ -9,3 +9,4 @@ export interface ICategoryRepository {
   update(category: Category): Promise<void>;
   delete(id: string): Promise<void>;
 }
+

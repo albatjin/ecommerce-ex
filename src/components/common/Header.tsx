@@ -1,16 +1,26 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, User, Search, Menu, UserPlus, LogOut } from 'lucide-react';
+import { ShoppingBag, User, Search, Menu, UserPlus, LogOut, X } from 'lucide-react';
 import { signOutAction } from '@/app/actions/auth.actions';
+import { CategoryDropdown } from '@/components/catalog/CategoryDropdown';
+import type { CategoryTreeNode } from '@/core/application/catalog/dtos/CategoryTreeDTO';
 
 interface HeaderProps {
   cartItemCount?: number;
   userName?: string | null;
   isAdmin?: boolean;
+  categories?: CategoryTreeNode[];
 }
 
-export function Header({ cartItemCount = 0, userName, isAdmin = false }: HeaderProps) {
+export function Header({
+  cartItemCount = 0,
+  userName,
+  isAdmin = false,
+  categories,
+}: HeaderProps) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
     <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
       {/* 1. 최상단 유틸리티 공지 & 인증 바 */}
@@ -72,10 +82,11 @@ export function Header({ cartItemCount = 0, userName, isAdmin = false }: HeaderP
         <div className="flex items-center gap-3">
           <button
             type="button"
-            className="p-2 -ml-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 md:hidden"
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            className="p-2 -ml-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 md:hidden cursor-pointer"
             aria-label="모바일 메뉴 열기"
           >
-            <Menu className="w-5 h-5" />
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
           <Link href="/" className="flex items-center gap-2 group">
@@ -160,9 +171,14 @@ export function Header({ cartItemCount = 0, userName, isAdmin = false }: HeaderP
         </div>
       </div>
 
-      {/* 3. 하단 GNB 내비게이션 바 */}
+      {/* 3. 하단 GNB 내비게이션 바 (데스크톱) */}
       <nav className="border-t border-slate-100 dark:border-slate-800/60 hidden md:block">
-        <div className="container-custom flex items-center gap-8 text-sm font-medium text-slate-600 dark:text-slate-300 py-2.5">
+        <div className="container-custom flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300 py-2">
+          {/* 전체 카테고리 드롭다운 */}
+          <CategoryDropdown categories={categories} />
+
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
+
           <Link href="/products" className="text-blue-600 font-bold hover:underline">
             전체 상품
           </Link>
@@ -180,6 +196,55 @@ export function Header({ cartItemCount = 0, userName, isAdmin = false }: HeaderP
           </Link>
         </div>
       </nav>
+
+      {/* 4. 모바일 내비게이션 드로어 */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-4 space-y-4 animate-in slide-in-from-top-2 duration-150">
+          <form action="/products" method="GET" className="relative">
+            <input
+              type="text"
+              name="q"
+              placeholder="상품 검색"
+              className="w-full pl-9 pr-4 py-2 text-sm rounded-lg bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-blue-500 focus:outline-none"
+            />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          </form>
+
+          <div className="space-y-1">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              카테고리 & 쇼핑
+            </p>
+            <Link
+              href="/products"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm font-semibold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+            >
+              전체 상품 둘러보기
+            </Link>
+            <Link
+              href="/products?sort=best"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              베스트
+            </Link>
+            <Link
+              href="/products?sort=new"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              신상품
+            </Link>
+            <Link
+              href="/products?filter=discount"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-lg text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              특가세일
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

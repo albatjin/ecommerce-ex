@@ -40,4 +40,24 @@ describe('Header Component', () => {
     render(<Header isAdmin={false} />);
     expect(screen.queryByText('관리자 콘솔')).not.toBeInTheDocument();
   });
+
+  it('GNB에 전체 카테고리 드롭다운 트리거가 렌더링된다', () => {
+    render(<Header />);
+    expect(screen.getByRole('button', { name: /전체 카테고리/i })).toBeInTheDocument();
+  });
+
+  it('모바일 햄버거 메뉴 버튼 클릭 시 모바일 내비게이션 드로어가 토글된다', () => {
+    const { fireEvent } = require('@testing-library/react');
+    render(<Header />);
+
+    const mobileMenuBtn = screen.getByRole('button', { name: '모바일 메뉴 열기' });
+    expect(screen.queryByText('전체 상품 둘러보기')).not.toBeInTheDocument();
+
+    fireEvent.click(mobileMenuBtn);
+    expect(screen.getByText('전체 상품 둘러보기')).toBeInTheDocument();
+
+    fireEvent.click(mobileMenuBtn);
+    expect(screen.queryByText('전체 상품 둘러보기')).not.toBeInTheDocument();
+  });
 });
+

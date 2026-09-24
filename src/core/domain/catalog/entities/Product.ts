@@ -187,3 +187,4 @@ export class Product extends Entity<ProductProps> {
     return ok(product);
   }
 }
+

@@ -15,6 +15,12 @@ export abstract class BaseError extends Error {
 }
 
 /**
+ * AppError 별칭 (BaseError 동일)
+ */
+export const AppError = BaseError;
+export type AppError = BaseError;
+
+/**
  * 리소스를 찾을 수 없을 때 (HTTP 404)
  */
 export class NotFoundError extends BaseError {

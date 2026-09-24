@@ -29,3 +29,4 @@ describe('Discount Value Object', () => {
     expect(discount.hasDiscount()).toBe(false);
   });
 });
+

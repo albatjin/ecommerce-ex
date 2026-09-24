@@ -56,3 +56,4 @@ describe('CategoryMapper', () => {
     expect(updateData.parent_id).toBeNull();
   });
 });
+

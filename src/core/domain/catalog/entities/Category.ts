@@ -80,3 +80,4 @@ export class Category extends Entity<CategoryProps> {
     return ok(category);
   }
 }
+

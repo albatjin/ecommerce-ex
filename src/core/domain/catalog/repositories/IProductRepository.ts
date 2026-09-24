@@ -21,3 +21,4 @@ export interface IProductRepository {
   update(product: Product): Promise<void>;
   delete(id: string): Promise<void>;
 }
+

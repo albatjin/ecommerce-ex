@@ -91,3 +91,4 @@ export class ProductVariant extends Entity<ProductVariantProps> {
     return ok(variant);
   }
 }
+

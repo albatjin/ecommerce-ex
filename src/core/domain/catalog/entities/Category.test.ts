@@ -49,3 +49,4 @@ describe('Category Entity', () => {
     expect(result.getError().message).toContain('카테고리 뎁스는 1(대분류), 2(중분류), 3(소분류)');
   });
 });
+

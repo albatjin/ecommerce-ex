@@ -99,3 +99,4 @@ describe('ProductMapper', () => {
     expect(insertData.stock_quantity).toBe(10);
   });
 });
+

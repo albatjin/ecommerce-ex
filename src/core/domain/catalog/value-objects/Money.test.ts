@@ -41,3 +41,4 @@ describe('Money Value Object', () => {
     expect(() => krw.add(usd)).toThrow('화폐 단위가 일치하지 않습니다');
   });
 });
+

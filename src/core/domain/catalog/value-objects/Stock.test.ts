@@ -35,3 +35,4 @@ describe('Stock Value Object', () => {
     expect(restocked.quantity).toBe(40);
   });
 });
+

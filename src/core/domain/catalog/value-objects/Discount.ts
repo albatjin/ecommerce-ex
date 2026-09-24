@@ -55,3 +55,4 @@ export class Discount extends ValueObject<DiscountProps> {
     });
   }
 }
+

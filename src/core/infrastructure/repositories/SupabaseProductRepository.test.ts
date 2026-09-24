@@ -234,3 +234,4 @@ describe('SupabaseProductRepository', () => {
     expect(deleteMock).toHaveBeenCalled();
   });
 });
+
