@@ -8,16 +8,27 @@ import { SupabaseOrderRepository } from '@/core/infrastructure/repositories/Supa
 import { SupabaseProductRepository } from '@/core/infrastructure/repositories/SupabaseProductRepository';
 import { SupabaseCouponRepository } from '@/core/infrastructure/repositories/SupabaseCouponRepository';
 import { SupabasePointRepository } from '@/core/infrastructure/repositories/SupabasePointRepository';
+import { MockPaymentGateway } from '@/core/infrastructure/gateways/MockPaymentGateway';
 import {
   CreateOrderUseCase,
   type CreateOrderItemInput,
   type CreateOrderOutput,
 } from '@/core/application/order/use-cases/CreateOrderUseCase';
+import {
+  ApprovePaymentUseCase,
+  type ApprovePaymentOutput,
+} from '@/core/application/order/use-cases/ApprovePaymentUseCase';
 import type { PlaceOrderInput } from '@/core/application/order/dtos/CheckoutDTO';
 
 export interface OrderActionResult {
   success: boolean;
   data?: CreateOrderOutput;
+  error?: string;
+}
+
+export interface ApprovePaymentActionResult {
+  success: boolean;
+  data?: ApprovePaymentOutput;
   error?: string;
 }
 
@@ -103,6 +114,58 @@ export async function createOrderAction(
         error instanceof Error
           ? error.message
           : '주문 생성 중 예기치 않은 오류가 발생했습니다.',
+    };
+  }
+}
+
+/**
+ * PG사 결제 승인을 요청하고 주문 상태를 결제완료(PAID)로 전환합니다.
+ */
+export async function approvePaymentAction(
+  orderId: string,
+  paymentDetails?: Record<string, unknown>
+): Promise<ApprovePaymentActionResult> {
+  try {
+    const supabase = await getServerClient();
+    const orderRepo = new SupabaseOrderRepository(supabase);
+    const productRepo = new SupabaseProductRepository(supabase);
+    const pointRepo = new SupabasePointRepository(supabase);
+    const paymentGateway = new MockPaymentGateway();
+
+    const useCase = new ApprovePaymentUseCase(
+      orderRepo,
+      paymentGateway,
+      productRepo,
+      pointRepo
+    );
+
+    const result = await useCase.execute({
+      orderId,
+      paymentDetails,
+    });
+
+    if (result.isFailure) {
+      return {
+        success: false,
+        error: result.getError().message,
+      };
+    }
+
+    revalidatePath('/cart');
+    revalidatePath('/checkout');
+    revalidatePath('/my-page');
+
+    return {
+      success: true,
+      data: result.getValue(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : '결제 승인 처리 중 예기치 않은 오류가 발생했습니다.',
     };
   }
 }

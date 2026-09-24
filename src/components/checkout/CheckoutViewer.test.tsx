@@ -12,8 +12,10 @@ vi.mock('next/navigation', () => ({
 }));
 
 const mockCreateOrderAction = vi.fn();
+const mockApprovePaymentAction = vi.fn();
 vi.mock('@/app/actions/order.actions', () => ({
   createOrderAction: (...args: any[]) => mockCreateOrderAction(...args),
+  approvePaymentAction: (...args: any[]) => mockApprovePaymentAction(...args),
 }));
 
 describe('CheckoutViewer Component', () => {
@@ -144,10 +146,14 @@ describe('CheckoutViewer Component', () => {
     });
   });
 
-  it('onPlaceOrder가 없으면 createOrderAction을 직접 호출하여 주문을 처리한다', async () => {
+  it('onPlaceOrder가 없으면 createOrderAction과 approvePaymentAction을 호출하여 주문 및 결제를 완료한다', async () => {
     mockCreateOrderAction.mockResolvedValue({
       success: true,
       data: { orderId: 'ord-101', orderNumber: 'ORD-20260924-00099' },
+    });
+    mockApprovePaymentAction.mockResolvedValue({
+      success: true,
+      data: { orderId: 'ord-101', orderNumber: 'ORD-20260924-00099', status: 'PAID' },
     });
     vi.spyOn(window, 'alert').mockImplementation(() => {});
 
@@ -158,6 +164,7 @@ describe('CheckoutViewer Component', () => {
 
     await waitFor(() => {
       expect(mockCreateOrderAction).toHaveBeenCalledTimes(1);
+      expect(mockApprovePaymentAction).toHaveBeenCalledWith('ord-101');
       expect(mockPush).toHaveBeenCalledWith('/');
     });
   });

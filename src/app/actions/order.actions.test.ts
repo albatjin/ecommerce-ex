@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createOrderAction } from './order.actions';
+import { createOrderAction, approvePaymentAction } from './order.actions';
 import { ok, fail } from '@/core/domain/shared/Result';
 import { DomainError } from '@/core/domain/shared/AppError';
 
@@ -27,6 +27,19 @@ vi.mock('@/core/application/order/use-cases/CreateOrderUseCase', () => {
     },
   };
 });
+
+const mockApproveExecute = vi.fn();
+vi.mock('@/core/application/order/use-cases/ApprovePaymentUseCase', () => {
+  return {
+    ApprovePaymentUseCase: class {
+      execute = mockApproveExecute;
+    },
+  };
+});
+
+vi.mock('@/core/infrastructure/gateways/MockPaymentGateway', () => ({
+  MockPaymentGateway: class {},
+}));
 
 vi.mock('@/core/infrastructure/repositories/CookieCartRepository', () => {
   return {
@@ -127,5 +140,44 @@ describe('order.actions - createOrderAction', () => {
         items: [{ productId: 'prod-1', variantId: null, quantity: 2 }],
       })
     );
+  });
+});
+
+describe('order.actions - approvePaymentAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('결제 승인 성공 시 PAID 상태 및 거래 ID를 반환한다', async () => {
+    const paidAt = new Date();
+    mockApproveExecute.mockResolvedValue(
+      ok({
+        orderId: 'order-1',
+        orderNumber: 'ORD-20260924-00001',
+        status: 'PAID',
+        paidAt,
+        transactionId: 'PG_TX_123456',
+        totalPaidAmount: 50000,
+      })
+    );
+
+    const result = await approvePaymentAction('order-1');
+
+    expect(result.success).toBe(true);
+    expect(result.data?.status).toBe('PAID');
+    expect(result.data?.transactionId).toBe('PG_TX_123456');
+    expect(mockApproveExecute).toHaveBeenCalledWith({
+      orderId: 'order-1',
+      paymentDetails: undefined,
+    });
+  });
+
+  it('결제 승인 실패 시 에러 메시지를 반환한다', async () => {
+    mockApproveExecute.mockResolvedValue(fail(new DomainError('결제 한도 초과')));
+
+    const result = await approvePaymentAction('order-1');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('결제 한도 초과');
   });
 });

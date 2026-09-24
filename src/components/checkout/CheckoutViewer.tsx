@@ -21,7 +21,7 @@ import type {
   CheckoutDataDTO,
   CheckoutShippingInput,
 } from '@/core/application/order/dtos/CheckoutDTO';
-import { createOrderAction } from '@/app/actions/order.actions';
+import { createOrderAction, approvePaymentAction } from '@/app/actions/order.actions';
 
 interface CheckoutViewerProps {
   initialData: CheckoutDataDTO;
@@ -174,12 +174,18 @@ export function CheckoutViewer({
           pointsToUse: appliedPoints,
         });
 
-        if (!res.success) {
+        if (!res.success || !res.data) {
           setErrorMessage(res.error || '주문 처리 중 오류가 발생했습니다.');
           return;
         }
 
-        alert(`주문이 안전하게 접수되었습니다! (주문번호: ${res.data?.orderNumber})`);
+        const approveRes = await approvePaymentAction(res.data.orderId);
+        if (!approveRes.success) {
+          setErrorMessage(approveRes.error || '결제 승인 처리 중 오류가 발생했습니다.');
+          return;
+        }
+
+        alert(`주문 및 결제가 성공적으로 완료되었습니다! (주문번호: ${approveRes.data?.orderNumber})`);
         router.push('/');
       }
     } catch (err) {
