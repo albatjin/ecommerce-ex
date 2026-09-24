@@ -144,3 +144,4 @@ export class CustomerCoupon extends Entity<CustomerCouponProps> {
     return ok(coupon);
   }
 }
+

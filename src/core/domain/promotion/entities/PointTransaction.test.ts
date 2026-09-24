@@ -66,3 +66,4 @@ describe('PointTransaction Entity', () => {
     expect(zeroSpend.isFailure).toBe(true);
   });
 });
+

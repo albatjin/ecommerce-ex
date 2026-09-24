@@ -16,3 +16,4 @@ export interface IPointRepository {
    */
   recordTransaction(transaction: PointTransaction): Promise<void>;
 }
+

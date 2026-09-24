@@ -84,3 +84,4 @@ describe('SupabaseCouponRepository', () => {
     expect(insertMock).toHaveBeenCalledTimes(1);
   });
 });
+

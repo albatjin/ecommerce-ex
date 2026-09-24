@@ -26,3 +26,4 @@ export interface ICouponRepository {
    */
   issueCoupon(customerCoupon: CustomerCoupon): Promise<void>;
 }
+

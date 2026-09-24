@@ -87,3 +87,4 @@ describe('CustomerCoupon Entity', () => {
     expect(coupon.isUsable(30000)).toBe(true);
   });
 });
+
