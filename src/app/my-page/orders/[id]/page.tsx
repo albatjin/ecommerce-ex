@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   description: '주문 상세 품목, 결제 내역 및 배송 추적 정보를 확인하세요.',
 };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface MyOrderDetailPageProps {
   params: Promise<{
     id: string;

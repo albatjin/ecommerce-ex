@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   description: '주문 내역과 실시간 배송 현황을 확인하세요.',
 };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function MyOrdersPage() {
   const userRepository = new SupabaseUserRepository();
   const getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository);

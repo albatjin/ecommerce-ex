@@ -102,7 +102,7 @@ describe('OrderDetailViewer Component', () => {
     fireEvent.click(cancelBtn);
 
     // 모달 타이틀 확인
-    expect(screen.getByText('주문 취소 신청')).toBeInTheDocument();
+    expect(screen.getAllByText('주문 취소 신청').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('환불 예정 금액')).toBeInTheDocument();
 
     // 취소 사유 선택 및 확정 클릭
@@ -144,11 +144,11 @@ describe('OrderDetailViewer Component', () => {
     fireEvent.click(returnBtn);
 
     // 모달 확인
-    expect(screen.getByText('반품 신청 접수')).toBeInTheDocument();
+    expect(screen.getAllByText('반품 신청 접수').length).toBeGreaterThanOrEqual(1);
 
     // 반품 신청 접수 버튼 클릭
-    const confirmReturnBtn = screen.getByRole('button', { name: '반품 신청 접수' });
-    fireEvent.click(confirmReturnBtn);
+    const confirmReturnButtons = screen.getAllByRole('button', { name: '반품 신청 접수' });
+    fireEvent.click(confirmReturnButtons[confirmReturnButtons.length - 1]);
 
     await waitFor(() => {
       expect(mockReturnAction).toHaveBeenCalledWith(

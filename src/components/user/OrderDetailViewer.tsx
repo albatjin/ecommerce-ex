@@ -327,6 +327,78 @@ export function OrderDetailViewer({ order }: OrderDetailViewerProps) {
         )}
       </div>
 
+      {/* 2.5 주문 취소 / 반품 신청 전용 인터랙티브 패널 */}
+      {(isCancellable || isReturnEligible || isCancelledOrReturned) && (
+        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <RotateCcw className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+              주문 변경 및 클레임 안내
+            </h2>
+          </div>
+
+          {isCancellable && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50">
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-rose-700 dark:text-rose-400">
+                  주문 취소 가능
+                </span>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  아직 배송 출발 전 단계로, 즉시 주문 취소 및 결제 금액 환불이 가능합니다.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorMessage(null);
+                  setIsCancelModalOpen(true);
+                }}
+                className="py-2.5 px-5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-colors shrink-0 shadow-xs"
+              >
+                주문 취소 신청
+              </button>
+            </div>
+          )}
+
+          {isReturnEligible && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50">
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400">
+                  반품 신청 가능
+                </span>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  배송이 완료된 주문입니다. 상품에 문제가 있거나 단순 변심 시 반품을 접수하실 수 있습니다.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorMessage(null);
+                  setIsReturnModalOpen(true);
+                }}
+                className="py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-colors shrink-0 shadow-xs"
+              >
+                반품 신청 접수
+              </button>
+            </div>
+          )}
+
+          {currentStatus === 'CANCELLED' && (
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-600 dark:text-slate-300 space-y-1">
+              <span className="font-bold text-slate-900 dark:text-white">취소 완료 안내</span>
+              <p>이 주문은 취소 처리가 완료되어 더 이상 변경하실 수 없습니다.</p>
+            </div>
+          )}
+
+          {currentStatus === 'RETURN_REQUESTED' && (
+            <div className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 text-xs text-amber-800 dark:text-amber-300 space-y-1">
+              <span className="font-bold">반품 회수 진행 중</span>
+              <p>반품 요청이 접수되어 전담 택배사에서 상품 수거 일정을 조율 중입니다.</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 3. 주문 상품 목록 */}
       <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
         <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
