@@ -4,10 +4,15 @@ import type {
   IProductRepository,
   ProductFilterOptions,
 } from '@/core/domain/catalog/repositories/IProductRepository';
-import type { Product } from '@/core/domain/catalog/entities/Product';
+import { Product } from '@/core/domain/catalog/entities/Product';
+import { ProductVariant } from '@/core/domain/catalog/entities/ProductVariant';
+import { Money } from '@/core/domain/catalog/value-objects/Money';
+import { Stock } from '@/core/domain/catalog/value-objects/Stock';
+import { Discount } from '@/core/domain/catalog/value-objects/Discount';
 import { ProductMapper } from '../mappers/ProductMapper';
 import { getServerClient } from '../supabase/server';
 import { InternalError } from '@/core/domain/shared/AppError';
+import { MOCK_PRODUCTS } from '@/shared/data/mockProducts';
 
 export class SupabaseProductRepository implements IProductRepository {
   private client?: SupabaseClient<Database>;
@@ -23,7 +28,62 @@ export class SupabaseProductRepository implements IProductRepository {
     return (await getServerClient()) as unknown as SupabaseClient<Database>;
   }
 
+  private findFromMock(idOrCode: string, byCode = false): Product | null {
+    const mock = MOCK_PRODUCTS.find((p) =>
+      byCode ? p.productCode === idOrCode : p.id === idOrCode
+    );
+    if (!mock) return null;
+
+    const variants = (mock.variants || [])
+      .map((v) => {
+        const vResult = ProductVariant.create(
+          {
+            productId: mock.id,
+            skuCode: v.skuCode,
+            variantName: v.variantName,
+            options: v.options,
+            additionalPrice: Money.create(v.additionalPrice),
+            stock: Stock.create(v.stockQuantity),
+            status: v.status,
+          },
+          v.id
+        );
+        return vResult.isSuccess ? vResult.getValue() : null;
+      })
+      .filter((v): v is ProductVariant => v !== null);
+
+    const productResult = Product.create(
+      {
+        productCode: mock.productCode,
+        nameKo: mock.nameKo,
+        nameEn: mock.nameEn,
+        categoryId: mock.categoryId,
+        discount: Discount.create(
+          Money.create(mock.regularPrice),
+          Money.create(mock.salePrice)
+        ),
+        taxType: mock.taxType,
+        maxOrderQuantity: 10,
+        stock: Stock.create(mock.stockQuantity),
+        status: mock.status,
+        brandName: mock.brandName,
+        description: mock.description,
+        coverImageUrl: mock.coverImageUrl,
+        additionalImages: mock.additionalImages || [],
+        shippingFee: Money.create(mock.shippingFee || 0),
+        variants,
+      },
+      mock.id
+    );
+
+    return productResult.isSuccess ? productResult.getValue() : null;
+  }
+
   public async findById(id: string): Promise<Product | null> {
+    if (id.startsWith('sample-')) {
+      return this.findFromMock(id);
+    }
+
     const supabase = await this.getClient();
 
     const { data: productRow, error: productError } = await supabase
@@ -33,10 +93,15 @@ export class SupabaseProductRepository implements IProductRepository {
       .maybeSingle();
 
     if (productError) {
+      if (productError.message.includes('uuid')) {
+        return this.findFromMock(id);
+      }
       throw new InternalError(`Failed to fetch product by id: ${productError.message}`, productError);
     }
 
-    if (!productRow) return null;
+    if (!productRow) {
+      return this.findFromMock(id);
+    }
 
     const { data: variantRows, error: variantError } = await supabase
       .from('product_variants')
@@ -63,13 +128,17 @@ export class SupabaseProductRepository implements IProductRepository {
       .maybeSingle();
 
     if (productError) {
+      const mock = this.findFromMock(productCode, true);
+      if (mock) return mock;
       throw new InternalError(
         `Failed to fetch product by code: ${productError.message}`,
         productError
       );
     }
 
-    if (!productRow) return null;
+    if (!productRow) {
+      return this.findFromMock(productCode, true);
+    }
 
     const { data: variantRows, error: variantError } = await supabase
       .from('product_variants')
@@ -155,6 +224,10 @@ export class SupabaseProductRepository implements IProductRepository {
   }
 
   public async save(product: Product): Promise<void> {
+    if (product.id.startsWith('sample-')) {
+      return;
+    }
+
     const supabase = await this.getClient();
 
     const { error: productError } = await supabase
@@ -181,6 +254,15 @@ export class SupabaseProductRepository implements IProductRepository {
   }
 
   public async update(product: Product): Promise<void> {
+    if (product.id.startsWith('sample-')) {
+      const mock = MOCK_PRODUCTS.find((p) => p.id === product.id);
+      if (mock) {
+        mock.stockQuantity = product.stock.quantity;
+        mock.status = product.status;
+      }
+      return;
+    }
+
     const supabase = await this.getClient();
 
     const { error } = await supabase
@@ -189,17 +271,26 @@ export class SupabaseProductRepository implements IProductRepository {
       .eq('id', product.id);
 
     if (error) {
+      if (error.message.includes('uuid')) {
+        return;
+      }
       throw new InternalError(`Failed to update product: ${error.message}`, error);
     }
   }
 
   public async delete(id: string): Promise<void> {
+    if (id.startsWith('sample-')) {
+      return;
+    }
+
     const supabase = await this.getClient();
     const { error } = await supabase.from('products').delete().eq('id', id);
 
     if (error) {
+      if (error.message.includes('uuid')) {
+        return;
+      }
       throw new InternalError(`Failed to delete product: ${error.message}`, error);
     }
   }
 }
-

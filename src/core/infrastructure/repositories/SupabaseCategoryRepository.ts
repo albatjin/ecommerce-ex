@@ -21,6 +21,11 @@ export class SupabaseCategoryRepository implements ICategoryRepository {
   }
 
   public async findById(id: string): Promise<Category | null> {
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_REGEX.test(id)) {
+      return this.findBySlug(id);
+    }
+
     const supabase = await this.getClient();
     const { data, error } = await supabase
       .from('categories')
