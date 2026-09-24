@@ -3,6 +3,12 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ProductDetailViewer } from './ProductDetailViewer';
 import type { ProductDetailDTO } from '@/core/application/catalog/dtos/ProductDetailDTO';
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  }),
+}));
+
 describe('ProductDetailViewer', () => {
   const sampleDetail: ProductDetailDTO = {
     id: 'prod-detail-1',

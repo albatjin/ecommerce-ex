@@ -20,10 +20,13 @@ export default async function CheckoutPage() {
   const cartResult = await getCartAction();
   const cart = cartResult.success ? cartResult.data : null;
 
-  // 1. 장바구니 내 선택된 품목 필터링
-  const selectedItems = (cart?.items || []).filter((item) => item.selected);
+  // 1. 장바구니 내 선택된 품목 필터링 (품목이 존재하나 미선택 상태인 경우 전체 품목 기본 적용)
+  let selectedItems = (cart?.items || []).filter((item) => item.selected);
+  if (selectedItems.length === 0 && (cart?.items || []).length > 0) {
+    selectedItems = cart!.items;
+  }
 
-  // 선택된 품목이 없을 경우 안내 화면 노출
+  // 선택된 품목이 없을 경우(장바구니가 완전히 비어있는 경우) 안내 화면 노출
   if (selectedItems.length === 0) {
     return (
       <div className="container-custom py-16">

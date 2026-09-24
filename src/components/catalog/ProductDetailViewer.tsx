@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ShoppingBag,
   CreditCard,
@@ -51,6 +52,13 @@ export function ProductDetailViewer({
   const [activeTab, setActiveTab] = useState<'desc' | 'shipping'>('desc');
   const [addedAlert, setAddedAlert] = useState(false);
   const { addToCart } = useCart();
+  
+  let router: ReturnType<typeof useRouter> | null = null;
+  try {
+    router = useRouter();
+  } catch {
+    // Router context fallback
+  }
 
   // 재고 및 주문 가능 여부
   const currentStock = selectedVariant
@@ -99,10 +107,31 @@ export function ProductDetailViewer({
     setTimeout(() => setAddedAlert(false), 3000);
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if (isOutOfStock) return;
     if (onBuyNow) {
       onBuyNow(product.id, selectedVariant?.id, quantity);
+      return;
+    }
+    const success = await addToCart(
+      {
+        productId: product.id,
+        variantId: selectedVariant?.id ?? null,
+        productName: product.nameKo,
+        variantName: selectedVariant?.variantName ?? null,
+        price: unitPrice,
+        quantity,
+        coverImageUrl: selectedImage || null,
+        shippingFee: product.shippingFee,
+      },
+      false
+    );
+    if (success) {
+      if (router) {
+        router.push('/checkout');
+      } else if (typeof window !== 'undefined') {
+        window.location.href = '/checkout';
+      }
     }
   };
 
