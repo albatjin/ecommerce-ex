@@ -61,3 +61,4 @@ describe('CategoryDropdown', () => {
     expect(screen.getByText('패션의류/잡화 전체보기')).toBeInTheDocument();
   });
 });
+

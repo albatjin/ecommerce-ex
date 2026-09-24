@@ -7,3 +7,4 @@ export interface CategoryTreeNode {
   parentId: string | null;
   children: CategoryTreeNode[];
 }
+

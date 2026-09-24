@@ -1,12 +1,24 @@
 'use server';
 
 import { SupabaseCategoryRepository } from '@/core/infrastructure/repositories/SupabaseCategoryRepository';
+import { SupabaseProductRepository } from '@/core/infrastructure/repositories/SupabaseProductRepository';
 import { GetCategoryTreeUseCase } from '@/core/application/catalog/use-cases/GetCategoryTreeUseCase';
+import { GetProductsUseCase } from '@/core/application/catalog/use-cases/GetProductsUseCase';
 import type { CategoryTreeNode } from '@/core/application/catalog/dtos/CategoryTreeDTO';
+import type {
+  GetProductsQueryDTO,
+  GetProductsResultDTO,
+} from '@/core/application/catalog/dtos/GetProductsDTO';
 
 export interface GetCategoryTreeActionResult {
   success: boolean;
   data?: CategoryTreeNode[];
+  error?: string;
+}
+
+export interface GetProductsActionResult {
+  success: boolean;
+  data?: GetProductsResultDTO;
   error?: string;
 }
 
@@ -28,6 +40,31 @@ export async function getCategoryTreeAction(): Promise<GetCategoryTreeActionResu
     return {
       success: false,
       error: error instanceof Error ? error.message : '카테고리를 불러오지 못했습니다.',
+    };
+  }
+}
+
+/**
+ * 상품 목록 검색/다중필터/정렬/페이지네이션 Server Action
+ */
+export async function getProductsAction(
+  query: GetProductsQueryDTO = {}
+): Promise<GetProductsActionResult> {
+  try {
+    const productRepository = new SupabaseProductRepository();
+    const categoryRepository = new SupabaseCategoryRepository();
+    const useCase = new GetProductsUseCase(productRepository, categoryRepository);
+    const result = await useCase.execute(query);
+
+    if (result.isFailure) {
+      return { success: false, error: result.getError().message };
+    }
+
+    return { success: true, data: result.getValue() };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '상품 목록을 불러오지 못했습니다.',
     };
   }
 }

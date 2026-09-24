@@ -247,3 +247,4 @@ export function CategoryDropdown({ categories }: CategoryDropdownProps) {
     </div>
   );
 }
+

@@ -124,3 +124,4 @@ describe('GetCategoryTreeUseCase', () => {
     expect(result.getError().message).toContain('카테고리');
   });
 });
+
