@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ProductCard } from './ProductCard';
 import { ChevronLeft, ChevronRight, PackageSearch } from 'lucide-react';
@@ -48,12 +49,12 @@ export function ProductGrid({
         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">
           다른 검색어를 입력하시거나 필터(카테고리, 가격대 등)를 변경해 보세요.
         </p>
-        <a
+        <Link
           href="/products"
           className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-all shadow-sm"
         >
           전체 상품 보기
-        </a>
+        </Link>
       </div>
     );
   }

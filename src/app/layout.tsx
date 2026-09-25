@@ -33,7 +33,7 @@ export default async function RootLayout({
 
     if (user) {
       userName = user.user_metadata?.name || user.email?.split('@')[0] || null;
-      let role = (user.user_metadata?.role || user.app_metadata?.role) as UserRole | undefined;
+      const role = (user.user_metadata?.role || user.app_metadata?.role) as UserRole | undefined;
 
       // 1. Supabase users 테이블에서 실제 role 및 name 조회
       let dbRole: UserRole | undefined;

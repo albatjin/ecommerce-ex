@@ -53,12 +53,7 @@ export function ProductDetailViewer({
   const [addedAlert, setAddedAlert] = useState(false);
   const { addToCart } = useCart();
   
-  let router: ReturnType<typeof useRouter> | null = null;
-  try {
-    router = useRouter();
-  } catch {
-    // Router context fallback
-  }
+  const router = useRouter();
 
   // 재고 및 주문 가능 여부
   const currentStock = selectedVariant

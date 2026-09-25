@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { Header } from './Header';
 
@@ -55,7 +55,6 @@ describe('Header Component', () => {
   });
 
   it('모바일 햄버거 메뉴 버튼 클릭 시 모바일 내비게이션 드로어가 토글된다', () => {
-    const { fireEvent } = require('@testing-library/react');
     render(<Header />);
 
     const mobileMenuBtn = screen.getByRole('button', { name: '모바일 메뉴 열기' });
