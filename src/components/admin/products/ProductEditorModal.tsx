@@ -20,6 +20,7 @@ import {
 import type { ProductSummaryDTO } from '@/core/application/catalog/dtos/GetProductsDTO';
 import type { CategoryTreeNode } from '@/core/application/catalog/dtos/CategoryTreeDTO';
 import type { ProductStatus, ProductTaxType } from '@/shared/types/database.types';
+import { flattenCategoryTree, DEFAULT_CATEGORIES } from '@/shared/data/defaultCategories';
 
 interface ProductEditorModalProps {
   isOpen: boolean;
@@ -53,6 +54,10 @@ export function ProductEditorModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isUploading, setIsUploading] = useState(false);
+
+  // 카테고리 계층 평탄화 및 Fallback 처리
+  const effectiveCategories = categories && categories.length > 0 ? categories : DEFAULT_CATEGORIES;
+  const flatCategories = flattenCategoryTree(effectiveCategories);
 
   if (!isOpen) return null;
 
@@ -221,11 +226,14 @@ export function ProductEditorModal({
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-indigo-500 focus:outline-none"
                 >
                   <option value="">카테고리 선택 (없음)</option>
-                  {categories.map((cat) => (
+                  {flatCategories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
-                      {cat.name}
+                      {cat.displayName}
                     </option>
                   ))}
+                  {Boolean(categoryId && !flatCategories.some((cat) => cat.id === categoryId)) && (
+                    <option value={categoryId}>기타 카테고리 ({categoryId})</option>
+                  )}
                 </select>
               </div>
 

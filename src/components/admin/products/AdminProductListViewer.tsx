@@ -25,6 +25,11 @@ import type {
 } from '@/core/application/catalog/dtos/GetProductsDTO';
 import type { CategoryTreeNode } from '@/core/application/catalog/dtos/CategoryTreeDTO';
 import type { ProductStatus } from '@/shared/types/database.types';
+import {
+  flattenCategoryTree,
+  getCategoryDescendantIds,
+  DEFAULT_CATEGORIES,
+} from '@/shared/data/defaultCategories';
 
 interface AdminProductListViewerProps {
   initialData: GetProductsResultDTO;
@@ -47,13 +52,20 @@ export function AdminProductListViewer({
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  // 카테고리 계층 평탄화 및 Fallback 처리
+  const effectiveCategories = categories && categories.length > 0 ? categories : DEFAULT_CATEGORIES;
+  const flatCategories = flattenCategoryTree(effectiveCategories);
+
   // 필터링 적용 목록
   const filteredProducts = products.filter((p) => {
     if (selectedStatus !== 'ALL' && p.status !== selectedStatus) {
       return false;
     }
-    if (selectedCategory && p.categoryId !== selectedCategory) {
-      return false;
+    if (selectedCategory) {
+      const allowedCategoryIds = getCategoryDescendantIds(selectedCategory, effectiveCategories);
+      if (!p.categoryId || !allowedCategoryIds.has(p.categoryId)) {
+        return false;
+      }
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -258,9 +270,9 @@ export function AdminProductListViewer({
               className="w-full md:w-48 px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none"
             >
               <option value="">모든 카테고리</option>
-              {categories.map((cat) => (
+              {flatCategories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
-                  {cat.name}
+                  {cat.displayName}
                 </option>
               ))}
             </select>
@@ -450,7 +462,7 @@ export function AdminProductListViewer({
         onClose={() => setIsModalOpen(false)}
         onSaved={handleProductSaved}
         product={editingProduct}
-        categories={categories}
+        categories={effectiveCategories}
       />
     </div>
   );

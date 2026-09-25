@@ -3,6 +3,8 @@ import { getAdminProductsAction } from '@/app/actions/product-admin.actions';
 import { getCategoryTreeAction } from '@/app/actions/catalog.actions';
 import { AdminProductListViewer } from '@/components/admin/products/AdminProductListViewer';
 import type { GetProductsResultDTO } from '@/core/application/catalog/dtos/GetProductsDTO';
+import { DEFAULT_CATEGORIES } from '@/shared/data/defaultCategories';
+import { MOCK_PRODUCTS } from '@/shared/data/mockProducts';
 
 export const metadata: Metadata = {
   title: '상품 통합 관리 (CMS) | CommerceHub Admin',
@@ -19,8 +21,8 @@ export default async function AdminProductsPage() {
   ]);
 
   const fallbackData: GetProductsResultDTO = {
-    products: [],
-    totalCount: 0,
+    products: MOCK_PRODUCTS,
+    totalCount: MOCK_PRODUCTS.length,
     currentPage: 1,
     limit: 50,
     totalPages: 1,
@@ -28,8 +30,14 @@ export default async function AdminProductsPage() {
     hasNextPage: false,
   };
 
-  const initialData = productRes.success && productRes.data ? productRes.data : fallbackData;
-  const categories = categoryRes.success && categoryRes.data ? categoryRes.data : [];
+  const initialData =
+    productRes.success && productRes.data && productRes.data.products.length > 0
+      ? productRes.data
+      : fallbackData;
+  const categories =
+    categoryRes.success && categoryRes.data && categoryRes.data.length > 0
+      ? categoryRes.data
+      : DEFAULT_CATEGORIES;
 
   return (
     <AdminProductListViewer

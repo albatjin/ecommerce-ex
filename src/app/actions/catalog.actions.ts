@@ -11,6 +11,7 @@ import type {
   GetProductsResultDTO,
 } from '@/core/application/catalog/dtos/GetProductsDTO';
 import type { ProductDetailDTO } from '@/core/application/catalog/dtos/ProductDetailDTO';
+import { DEFAULT_CATEGORIES } from '@/shared/data/defaultCategories';
 
 export interface GetCategoryTreeActionResult {
   success: boolean;
@@ -44,7 +45,11 @@ export async function getCategoryTreeAction(): Promise<GetCategoryTreeActionResu
       return { success: false, error: result.getError().message };
     }
 
-    return { success: true, data: result.getValue() };
+    const data = result.getValue();
+    return {
+      success: true,
+      data: data && data.length > 0 ? data : DEFAULT_CATEGORIES,
+    };
   } catch (error) {
     return {
       success: false,

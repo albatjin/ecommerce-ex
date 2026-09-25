@@ -4,105 +4,11 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Menu, ChevronRight, ChevronDown, Sparkles } from 'lucide-react';
 import type { CategoryTreeNode } from '@/core/application/catalog/dtos/CategoryTreeDTO';
+import { DEFAULT_CATEGORIES } from '@/shared/data/defaultCategories';
 
 interface CategoryDropdownProps {
   categories?: CategoryTreeNode[];
 }
-
-// 초기 DB 카테고리가 비어있을 때를 위한 프리미엄 기본 카테고리
-const DEFAULT_CATEGORIES: CategoryTreeNode[] = [
-  {
-    id: 'default-fashion',
-    name: '패션의류/잡화',
-    slug: 'fashion',
-    depth: 1,
-    sortOrder: 1,
-    parentId: null,
-    children: [
-      {
-        id: 'default-women',
-        name: '여성의류',
-        slug: 'women-fashion',
-        depth: 2,
-        sortOrder: 1,
-        parentId: 'default-fashion',
-        children: [
-          { id: 'default-w-coat', name: '코트/자켓', slug: 'women-coats', depth: 3, sortOrder: 1, parentId: 'default-women', children: [] },
-          { id: 'default-w-knit', name: '니트/가디건', slug: 'women-knits', depth: 3, sortOrder: 2, parentId: 'default-women', children: [] },
-          { id: 'default-w-dress', name: '원피스', slug: 'women-dresses', depth: 3, sortOrder: 3, parentId: 'default-women', children: [] },
-        ],
-      },
-      {
-        id: 'default-men',
-        name: '남성의류',
-        slug: 'men-fashion',
-        depth: 2,
-        sortOrder: 2,
-        parentId: 'default-fashion',
-        children: [
-          { id: 'default-m-outer', name: '아우터', slug: 'men-outer', depth: 3, sortOrder: 1, parentId: 'default-men', children: [] },
-          { id: 'default-m-shirts', name: '셔츠/남방', slug: 'men-shirts', depth: 3, sortOrder: 2, parentId: 'default-men', children: [] },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'default-digital',
-    name: '디지털/가전',
-    slug: 'digital',
-    depth: 1,
-    sortOrder: 2,
-    parentId: null,
-    children: [
-      {
-        id: 'default-smartphones',
-        name: '스마트폰/태블릿',
-        slug: 'mobile-devices',
-        depth: 2,
-        sortOrder: 1,
-        parentId: 'default-digital',
-        children: [],
-      },
-      {
-        id: 'default-audio',
-        name: '음향가전',
-        slug: 'audio',
-        depth: 2,
-        sortOrder: 2,
-        parentId: 'default-digital',
-        children: [],
-      },
-    ],
-  },
-  {
-    id: 'default-living',
-    name: '홈/리빙/인테리어',
-    slug: 'living',
-    depth: 1,
-    sortOrder: 3,
-    parentId: null,
-    children: [
-      {
-        id: 'default-furniture',
-        name: '디자인가구',
-        slug: 'furniture',
-        depth: 2,
-        sortOrder: 1,
-        parentId: 'default-living',
-        children: [],
-      },
-    ],
-  },
-  {
-    id: 'default-beauty',
-    name: '뷰티/스킨케어',
-    slug: 'beauty',
-    depth: 1,
-    sortOrder: 4,
-    parentId: null,
-    children: [],
-  },
-];
 
 export function CategoryDropdown({ categories }: CategoryDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
