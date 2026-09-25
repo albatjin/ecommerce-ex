@@ -201,14 +201,42 @@ export class User extends Entity<UserProps> {
   }
 
   /**
+   * 회원 등급 관리자 수동 변경
+   */
+  public changeMembershipGrade(newGrade: MembershipGrade): void {
+    this.props.membershipGrade = newGrade;
+    this.props.updatedAt = new Date();
+  }
+
+  /**
+   * 회원 역할 권한 변경
+   */
+  public changeRole(newRole: UserRole): void {
+    this.props.role = newRole;
+    this.props.updatedAt = new Date();
+  }
+
+  /**
    * User 엔티티 생성 팩토리
    */
   public static create(
-    props: Omit<UserProps, 'createdAt' | 'updatedAt' | 'totalSpent' | 'totalOrders' | 'membershipGrade' | 'status'> & {
+    props: Omit<
+      UserProps,
+      | 'createdAt'
+      | 'updatedAt'
+      | 'totalSpent'
+      | 'totalOrders'
+      | 'membershipGrade'
+      | 'status'
+      | 'rewardPoints'
+      | 'couponsCount'
+    > & {
       totalSpent?: number;
       totalOrders?: number;
       membershipGrade?: MembershipGrade;
       status?: UserStatus;
+      rewardPoints?: number;
+      couponsCount?: number;
       createdAt?: Date;
       updatedAt?: Date;
     },
@@ -230,6 +258,8 @@ export class User extends Entity<UserProps> {
         totalOrders: props.totalOrders ?? 0,
         membershipGrade: props.membershipGrade ?? 'BRONZE',
         status: props.status ?? 'ACTIVE',
+        rewardPoints: props.rewardPoints ?? 0,
+        couponsCount: props.couponsCount ?? 0,
         createdAt: props.createdAt ?? now,
         updatedAt: props.updatedAt ?? now,
       },
