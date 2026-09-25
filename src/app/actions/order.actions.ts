@@ -41,6 +41,12 @@ import {
   type GetAdminOrdersInput,
   type AdminOrdersResultDTO,
 } from '@/core/application/order/use-cases/GetAdminOrdersUseCase';
+import {
+  UpdateOrderDeliveryUseCase,
+  type UpdateOrderDeliveryInput,
+  type UpdateOrderDeliveryOutput,
+} from '@/core/application/order/use-cases/UpdateOrderDeliveryUseCase';
+import { checkIsAdmin } from '@/shared/utils/admin';
 import type { PlaceOrderInput } from '@/core/application/order/dtos/CheckoutDTO';
 import type {
   OrderDetailDTO,
@@ -587,5 +593,64 @@ export async function getAdminOrdersAction(
     };
   }
 }
+
+export interface UpdateOrderDeliveryActionResult {
+  success: boolean;
+  data?: UpdateOrderDeliveryOutput;
+  error?: string;
+}
+
+/**
+ * 관리자 주문 배송 상태 단계별 변경 및 송장 번호 등록 Action
+ */
+export async function updateOrderDeliveryAction(
+  input: UpdateOrderDeliveryInput
+): Promise<UpdateOrderDeliveryActionResult> {
+  try {
+    const supabase = await getServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const userRole = user?.user_metadata?.role || user?.app_metadata?.role;
+    const isAdmin = checkIsAdmin({ role: userRole, email: user?.email });
+
+    if (user && !isAdmin) {
+      return { success: false, error: '관리자 권한이 필요합니다.' };
+    }
+
+    const orderRepo = new SupabaseOrderRepository(supabase);
+    const useCase = new UpdateOrderDeliveryUseCase(orderRepo);
+
+    const result = await useCase.execute(input);
+
+    if (result.isFailure) {
+      return {
+        success: false,
+        error: result.getError().message,
+      };
+    }
+
+    revalidatePath('/admin/orders');
+    revalidatePath('/admin/dashboard');
+    revalidatePath('/my-page/orders');
+    revalidatePath(`/my-page/orders/${input.orderId}`);
+    revalidatePath('/orders');
+
+    return {
+      success: true,
+      data: result.getValue(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : '주문 배송 상태 변경 처리 중 오류가 발생했습니다.',
+    };
+  }
+}
+
 
 

@@ -132,6 +132,24 @@ export class Order extends Entity<OrderProps> {
   }
 
   /**
+   * 운송장 정보 수정 (이미 배송 중인 상태에서 송장번호/택배사 변경 시)
+   */
+  public updateTracking(
+    trackingCompany: string,
+    trackingNumber: string
+  ): Result<void, DomainError> {
+    if (!trackingCompany.trim() || !trackingNumber.trim()) {
+      return fail(new DomainError('택배사 및 송장 번호는 필수 입력 항목입니다.'));
+    }
+
+    this.props.trackingCompany = trackingCompany.trim();
+    this.props.trackingNumber = trackingNumber.trim();
+    this.props.updatedAt = new Date();
+
+    return ok();
+  }
+
+  /**
    * 배송 완료 처리: SHIPPING -> DELIVERED
    */
   public markAsDelivered(deliveredAt: Date = new Date()): Result<void, DomainError> {

@@ -9,6 +9,7 @@ import {
   approveReturnAction,
   rejectReturnAction,
   getAdminOrdersAction,
+  updateOrderDeliveryAction,
 } from './order.actions';
 import { ok, fail } from '@/core/domain/shared/Result';
 import { DomainError } from '@/core/domain/shared/AppError';
@@ -107,6 +108,15 @@ vi.mock('@/core/application/order/use-cases/GetAdminOrdersUseCase', () => {
   return {
     GetAdminOrdersUseCase: class {
       execute = mockGetAdminOrdersExecute;
+    },
+  };
+});
+
+const mockUpdateOrderDeliveryExecute = vi.fn();
+vi.mock('@/core/application/order/use-cases/UpdateOrderDeliveryUseCase', () => {
+  return {
+    UpdateOrderDeliveryUseCase: class {
+      execute = mockUpdateOrderDeliveryExecute;
     },
   };
 });
@@ -518,5 +528,95 @@ describe('order.actions - getAdminOrdersAction', () => {
     expect(result.data?.orders[0].status).toBe('RETURN_REQUESTED');
   });
 });
+
+describe('order.actions - updateOrderDeliveryAction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('관리자가 주문의 배송 상태를 성공적으로 변경한다', async () => {
+    mockGetUser.mockResolvedValueOnce({
+      data: {
+        user: {
+          id: 'admin-1',
+          email: 'albat77@nate.com',
+          user_metadata: { role: 'admin' },
+        },
+      },
+    });
+
+    mockUpdateOrderDeliveryExecute.mockResolvedValueOnce(
+      ok({
+        orderId: 'order-1',
+        orderNumber: 'ORD-20260925-00001',
+        status: 'SHIPPING',
+        statusLabel: '배송 중',
+        trackingCompany: 'CJ대한통운',
+        trackingNumber: '123456789',
+        shippedAt: '2026-09-25T00:00:00Z',
+        deliveredAt: null,
+      })
+    );
+
+    const result = await updateOrderDeliveryAction({
+      orderId: 'order-1',
+      targetStatus: 'SHIPPING',
+      trackingCompany: 'CJ대한통운',
+      trackingNumber: '123456789',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.status).toBe('SHIPPING');
+    expect(result.data?.trackingCompany).toBe('CJ대한통운');
+    expect(result.data?.trackingNumber).toBe('123456789');
+  });
+
+  it('권한이 없는 사용자가 호출하면 실패한다', async () => {
+    mockGetUser.mockResolvedValueOnce({
+      data: {
+        user: {
+          id: 'user-normal',
+          email: 'user@normal.com',
+          user_metadata: { role: 'customer' },
+        },
+      },
+    });
+
+    const result = await updateOrderDeliveryAction({
+      orderId: 'order-1',
+      targetStatus: 'PREPARING',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('관리자 권한');
+  });
+
+  it('UseCase에서 에러를 반환하면 액션도 실패를 반환한다', async () => {
+    mockGetUser.mockResolvedValueOnce({
+      data: {
+        user: {
+          id: 'admin-1',
+          email: 'albat77@nate.com',
+          user_metadata: { role: 'admin' },
+        },
+      },
+    });
+
+    mockUpdateOrderDeliveryExecute.mockResolvedValueOnce(
+      fail(new DomainError('송장 번호는 필수 입력 항목입니다.'))
+    );
+
+    const result = await updateOrderDeliveryAction({
+      orderId: 'order-1',
+      targetStatus: 'SHIPPING',
+      trackingCompany: 'CJ대한통운',
+      trackingNumber: '',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('송장 번호는 필수');
+  });
+});
+
 
 

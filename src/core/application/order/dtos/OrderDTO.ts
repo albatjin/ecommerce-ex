@@ -91,6 +91,13 @@ export interface OrderListItemDTO {
   totalPaidAmount: number;
   paymentMethodLabel: string;
   createdAt: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  shippingAddress?: string;
+  trackingCompany?: string | null;
+  trackingNumber?: string | null;
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
 }
 
 export interface UserOrdersResultDTO {

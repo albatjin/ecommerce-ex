@@ -71,6 +71,13 @@ export class GetAdminOrdersUseCase {
         paymentMethodLabel:
           PAYMENT_METHOD_LABELS[order.paymentInfo.method] || order.paymentInfo.method,
         createdAt: order.createdAt.toISOString(),
+        recipientName: order.shippingAddress.recipientName,
+        recipientPhone: order.shippingAddress.recipientPhone,
+        shippingAddress: order.shippingAddress.address,
+        trackingCompany: order.trackingCompany ?? null,
+        trackingNumber: order.trackingNumber ?? null,
+        shippedAt: order.shippedAt ? order.shippedAt.toISOString() : null,
+        deliveredAt: order.deliveredAt ? order.deliveredAt.toISOString() : null,
       };
     });
 
