@@ -74,6 +74,22 @@ describe('SupabaseCategoryRepository', () => {
     expect(categories[0].name).toBe('아우터');
   });
 
+  it('findAll: 모든 카테고리 목록을 정렬 순서대로 반환한다', async () => {
+    const mockClient = {
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          order: vi.fn().mockResolvedValue({ data: [sampleRow], error: null }),
+        }),
+      }),
+    } as unknown as SupabaseClient<Database>;
+
+    const repo = new SupabaseCategoryRepository(mockClient);
+    const categories = await repo.findAll();
+
+    expect(categories).toHaveLength(1);
+    expect(categories[0].name).toBe('아우터');
+  });
+
   it('findByParentId: 부모 카테고리 ID로 하위 카테고리 목록을 조회한다 (null인 경우 루트 조회)', async () => {
     const mockClient = {
       from: vi.fn().mockReturnValue({

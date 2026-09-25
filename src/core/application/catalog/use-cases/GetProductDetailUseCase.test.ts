@@ -81,6 +81,7 @@ describe('GetProductDetailUseCase', () => {
       findById: vi.fn().mockResolvedValue(mockCategory),
       findBySlug: vi.fn(),
       findAllActive: vi.fn(),
+      findAll: vi.fn(),
       findByParentId: vi.fn(),
       save: vi.fn(),
       update: vi.fn(),

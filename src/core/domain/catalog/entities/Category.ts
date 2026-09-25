@@ -16,6 +16,7 @@ export interface UpdateCategoryDTO {
   name?: string;
   slug?: string;
   parentId?: string | null;
+  depth?: number;
   sortOrder?: number;
   isActive?: boolean;
 }
@@ -50,6 +51,10 @@ export class Category extends Entity<CategoryProps> {
       this.props.slug = dto.slug.trim();
     }
     if (dto.parentId !== undefined) this.props.parentId = dto.parentId;
+    if (dto.depth !== undefined) {
+      if (dto.depth < 1 || dto.depth > 3) throw new DomainError('카테고리 뎁스는 1~3 사이여야 합니다.');
+      this.props.depth = dto.depth;
+    }
     if (dto.sortOrder !== undefined) this.props.sortOrder = dto.sortOrder;
     if (dto.isActive !== undefined) this.props.isActive = dto.isActive;
   }

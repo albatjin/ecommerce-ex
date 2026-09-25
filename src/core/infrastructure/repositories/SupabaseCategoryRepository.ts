@@ -72,6 +72,20 @@ export class SupabaseCategoryRepository implements ICategoryRepository {
     return (data || []).map((row) => CategoryMapper.toDomain(row));
   }
 
+  public async findAll(): Promise<Category[]> {
+    const supabase = await this.getClient();
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('sort_order', { ascending: true });
+
+    if (error) {
+      throw new InternalError(`Failed to fetch all categories: ${error.message}`, error);
+    }
+
+    return (data || []).map((row) => CategoryMapper.toDomain(row));
+  }
+
   public async findByParentId(parentId: string | null): Promise<Category[]> {
     const supabase = await this.getClient();
     let query = supabase.from('categories').select('*').eq('is_active', true);
