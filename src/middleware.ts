@@ -3,18 +3,16 @@ import { updateSession } from '@/core/infrastructure/supabase/middleware';
 import { determineRouteAccess } from '@/core/application/auth/route-guard';
 import type { UserRole } from '@/shared/types/database.types';
 
+import { checkIsAdmin } from '@/shared/utils/admin';
+
 export async function middleware(request: NextRequest) {
   // 1. Supabase Auth 세션 갱신 및 사용자 정보 추출
   const { response, user } = await updateSession(request);
 
-  // 2. 사용자 역할(Role) 파악 (auth 메타데이터 및 이메일 기반 관리자 폴백)
-  const email = user?.email?.toLowerCase() || '';
-  const isEmailAdmin = email.startsWith('admin@') || email.includes('admin');
-  let userRole = (user?.user_metadata?.role || user?.app_metadata?.role) as UserRole | undefined;
-  if (!userRole && isEmailAdmin) {
-    userRole = 'admin';
-  }
-  userRole = userRole || 'customer';
+  // 2. 사용자 역할(Role) 파악 (auth 메타데이터 및 관리자 계정 판별)
+  const userRole = (user?.user_metadata?.role || user?.app_metadata?.role) as UserRole | undefined;
+  const isAdminUser = checkIsAdmin({ role: userRole, email: user?.email });
+  const effectiveRole: UserRole = isAdminUser ? 'admin' : (userRole || 'customer');
   const isAuthenticated = Boolean(user);
 
   // 3. 라우트 가드 규칙 검사
@@ -22,7 +20,7 @@ export async function middleware(request: NextRequest) {
     pathname: request.nextUrl.pathname,
     searchParams: request.nextUrl.searchParams.toString(),
     isAuthenticated,
-    userRole: isAuthenticated ? userRole : null,
+    userRole: isAuthenticated ? effectiveRole : null,
   });
 
   if (!allowed && redirectUrl) {

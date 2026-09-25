@@ -8,6 +8,7 @@ import { getCartAction } from '@/app/actions/cart.actions';
 import type { UserRole } from '@/shared/types/database.types';
 import type { CategoryTreeNode } from '@/core/application/catalog/dtos/CategoryTreeDTO';
 import type { CartDTO } from '@/core/application/cart/dtos/CartDTO';
+import { checkIsAdmin } from '@/shared/utils/admin';
 
 export const metadata: Metadata = {
   title: 'CommerceHub | 프리미엄 이커머스 셀렉트숍',
@@ -34,29 +35,35 @@ export default async function RootLayout({
       userName = user.user_metadata?.name || user.email?.split('@')[0] || null;
       let role = (user.user_metadata?.role || user.app_metadata?.role) as UserRole | undefined;
 
-      // 1. Supabase users 테이블에서 실제 role 조회 (user_metadata에 role이 없을 경우 대비)
-      if (!role) {
-        try {
-          const { data: dbUser } = await supabase
-            .from('users')
-            .select('name, role')
-            .eq('id', user.id)
-            .maybeSingle();
+      // 1. Supabase users 테이블에서 실제 role 및 name 조회
+      let dbRole: UserRole | undefined;
+      try {
+        const { data: dbUser } = await supabase
+          .from('users')
+          .select('name, role')
+          .eq('id', user.id)
+          .maybeSingle();
 
-          if (dbUser) {
-            role = dbUser.role as UserRole;
-            if (dbUser.name) userName = dbUser.name;
-          }
-        } catch {
-          // 조회 실패 시 안전하게 기본값 유지
+        if (dbUser) {
+          dbRole = dbUser.role as UserRole;
+          if (dbUser.name) userName = dbUser.name;
         }
+      } catch {
+        // 조회 실패 시 안전하게 기본값 유지
       }
 
-      // 2. 이메일 기반 관리자 폴백 검사 (admin@ 또는 아이디에 admin 포함된 경우)
-      const email = user.email?.toLowerCase() || '';
-      const isEmailAdmin = email.startsWith('admin@') || email.includes('admin');
+      // 2. 통합 관리자 권한 판별 (역할 및 albat77@nate.com 등 등록된 관리자 이메일)
+      const effectiveRole = role || dbRole;
+      isAdmin = checkIsAdmin({ role: effectiveRole, email: user.email });
 
-      isAdmin = ['super_admin', 'admin', 'manager', 'staff'].includes(role || 'customer') || isEmailAdmin;
+      // 3. 관리자 계정인데 DB 역할이 customer로 저장되어 있는 경우 admin으로 자동 동기화
+      if (isAdmin && dbRole === 'customer') {
+        try {
+          await supabase.from('users').update({ role: 'admin' }).eq('id', user.id);
+        } catch {
+          // 비동기 갱신 실패 시에도 세션은 정상 관리자로 동작
+        }
+      }
     }
 
     const [categoryResult, cartResult] = await Promise.all([

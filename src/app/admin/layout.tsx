@@ -23,15 +23,32 @@ export default async function AdminLayout({
   const getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository);
   const user = await getCurrentUserUseCase.execute();
 
+  const supabase = await (await import('@/core/infrastructure/supabase/server')).getServerClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+
+  const { checkIsAdmin } = await import('@/shared/utils/admin');
+  const isCurrentAdmin = checkIsAdmin({
+    role: user?.role,
+    email: user?.email || authUser?.email,
+  });
+
+  const adminRoleDisplay = (
+    user && ['super_admin', 'admin', 'manager', 'staff'].includes(user.role.toLowerCase())
+      ? user.role.toUpperCase()
+      : 'ADMIN'
+  );
+
   const adminUser = user
     ? {
         name: user.name,
         email: user.email,
-        role: user.role.toUpperCase(),
+        role: adminRoleDisplay,
       }
     : {
-        name: '시스템 관리자',
-        email: 'admin@commercehub.internal',
+        name: authUser?.user_metadata?.name || authUser?.email?.split('@')[0] || '시스템 관리자',
+        email: authUser?.email || 'admin@commercehub.internal',
         role: 'ADMIN',
       };
 

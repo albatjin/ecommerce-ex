@@ -11,6 +11,7 @@ import {
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/shared/types/database.types';
 import { getServerClient } from '@/core/infrastructure/supabase/server';
+import { isEmailAdmin } from '@/shared/utils/admin';
 
 export class SignInUseCase {
   constructor(
@@ -55,6 +56,15 @@ export class SignInUseCase {
         // 이미 탈퇴한 계정인 경우 세션 즉시 만료 처리
         await supabase.auth.signOut();
         return fail(new UnauthorizedError('탈퇴 처리된 계정입니다. 고객센터에 문의해 주세요.'));
+      }
+
+      // 지정된 관리자 이메일 계정인 경우 DB 역할 자동 동기화
+      if (isEmailAdmin(dto.email) && user.role === 'customer') {
+        try {
+          await supabase.from('users').update({ role: 'admin' }).eq('id', user.id);
+        } catch {
+          // 비동기 갱신 실패 무시
+        }
       }
 
       return ok(user);

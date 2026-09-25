@@ -9,6 +9,7 @@ import {
   type AdminDashboardDTO,
   type AdminSalesAnalyticsDTO,
 } from '@/core/application/admin';
+import { checkIsAdmin } from '@/shared/utils/admin';
 
 export interface AdminActionResult<T> {
   success: boolean;
@@ -28,10 +29,9 @@ export async function getAdminDashboardSummaryAction(): Promise<
       data: { user },
     } = await supabase.auth.getUser();
 
-    // 관리자 인가 확인 (권한 메타데이터 검사)
-    const userRole = user?.user_metadata?.role || user?.app_metadata?.role || 'admin';
-    const allowedRoles = ['super_admin', 'admin', 'manager', 'staff'];
-    const isAdmin = allowedRoles.includes(userRole);
+    // 관리자 인가 확인 (권한 메타데이터 및 albat77@nate.com 등 관리자 이메일 계정 검사)
+    const userRole = user?.user_metadata?.role || user?.app_metadata?.role;
+    const isAdmin = checkIsAdmin({ role: userRole, email: user?.email });
 
     if (user && !isAdmin) {
       return {
@@ -80,9 +80,9 @@ export async function getAdminSalesAnalyticsAction(
       data: { user },
     } = await supabase.auth.getUser();
 
-    const userRole = user?.user_metadata?.role || user?.app_metadata?.role || 'admin';
-    const allowedRoles = ['super_admin', 'admin', 'manager', 'staff'];
-    const isAdmin = allowedRoles.includes(userRole);
+    // 관리자 인가 확인 (권한 메타데이터 및 albat77@nate.com 등 관리자 이메일 계정 검사)
+    const userRole = user?.user_metadata?.role || user?.app_metadata?.role;
+    const isAdmin = checkIsAdmin({ role: userRole, email: user?.email });
 
     if (user && !isAdmin) {
       return {
