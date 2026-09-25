@@ -31,75 +31,78 @@ export function Header({
   return (
     <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
       {/* 1. 최상단 유틸리티 공지 & 인증 바 */}
-      <div className="bg-slate-900 text-slate-300 text-xs py-1.5 px-4 hidden sm:block">
+      <div className="bg-slate-900 text-slate-200 text-xs py-2.5 px-4 hidden sm:block">
         <div className="container-custom flex justify-between items-center">
+          {/* 왼쪽 칼라 메뉴는 그대로 유지 */}
           <p className="font-medium tracking-wide">
             🎉 신규 회원 가입 시 <span className="text-amber-400 font-bold">3,000원 웰컴 적립금</span> 즉시 지급!
           </p>
-          <div className="flex items-center gap-3.5 text-slate-400 text-[11px]">
+
+          {/* 오른쪽 화면에 배치된 메뉴: 밝고 선명한 밝은색으로 가독성 대폭 향상 */}
+          <div className="flex items-center gap-3.5 text-xs text-slate-200 font-medium">
             {isAdmin && (
               <>
                 <Link
                   href="/admin"
-                  className="inline-flex items-center gap-1 text-amber-300 hover:text-amber-200 font-bold bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/40 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-amber-300 hover:text-amber-100 font-bold bg-amber-500/25 px-2.5 py-1 rounded-md border border-amber-400/50 transition-colors shadow-xs"
                 >
-                  <ShieldCheck className="w-3 h-3 text-amber-400" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
                   관리자 콘솔
                 </Link>
-                <span className="text-slate-700">|</span>
-                <Link href="/admin/claims" className="text-amber-400/90 hover:text-amber-300">
+                <span className="text-slate-600 font-light">|</span>
+                <Link href="/admin/claims" className="text-amber-300/90 hover:text-amber-100 font-semibold transition-colors">
                   클레임관리
                 </Link>
-                <span className="text-slate-700">|</span>
-                <Link href="/admin/inquiries" className="text-amber-400/90 hover:text-amber-300">
+                <span className="text-slate-600 font-light">|</span>
+                <Link href="/admin/inquiries" className="text-amber-300/90 hover:text-amber-100 font-semibold transition-colors">
                   문의관리
                 </Link>
-                <span className="text-slate-700">|</span>
+                <span className="text-slate-600 font-light">|</span>
               </>
             )}
 
             {userName ? (
               <>
-                <span className="text-slate-300 font-medium">
-                  <span className="text-blue-400 font-bold">{displayUserName}</span>님
+                <span className="text-slate-100 font-semibold">
+                  <span className="text-sky-300 font-bold">{displayUserName}</span>님
                 </span>
-                <span className="text-slate-700">|</span>
-                <Link href="/my-page" className="hover:text-white transition-colors">
+                <span className="text-slate-600 font-light">|</span>
+                <Link href="/my-page" className="text-slate-200 hover:text-white transition-colors">
                   마이페이지
                 </Link>
-                <span className="text-slate-700">|</span>
+                <span className="text-slate-600 font-light">|</span>
                 <form action={signOutAction} className="inline">
-                  <button type="submit" className="hover:text-white transition-colors">
+                  <button type="submit" className="text-slate-200 hover:text-white transition-colors cursor-pointer">
                     로그아웃
                   </button>
                 </form>
               </>
             ) : (
               <>
-                <Link href="/login" className="text-slate-300 hover:text-white transition-colors font-medium">
+                <Link href="/login" className="text-slate-200 hover:text-white transition-colors font-medium">
                   로그인
                 </Link>
-                <span className="text-slate-700">|</span>
-                <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-bold transition-colors">
+                <span className="text-slate-600 font-light">|</span>
+                <Link href="/signup" className="text-sky-300 hover:text-sky-200 font-bold transition-colors">
                   회원가입
                 </Link>
               </>
             )}
 
-            <span className="text-slate-700">|</span>
-            <Link href="/my-page/orders" className="hover:text-white transition-colors">
+            <span className="text-slate-600 font-light">|</span>
+            <Link href="/my-page/orders" className="text-slate-200 hover:text-white transition-colors">
               주문/배송
             </Link>
-            <span className="text-slate-700">|</span>
-            <Link href="/my-page/claims" className="hover:text-white transition-colors">
+            <span className="text-slate-600 font-light">|</span>
+            <Link href="/my-page/claims" className="text-slate-200 hover:text-white transition-colors">
               취소/반품
             </Link>
-            <span className="text-slate-700">|</span>
-            <Link href="/my-page/inquiries" className="hover:text-white transition-colors">
+            <span className="text-slate-600 font-light">|</span>
+            <Link href="/my-page/inquiries" className="text-slate-200 hover:text-white transition-colors">
               1:1 문의
             </Link>
-            <span className="text-slate-700">|</span>
-            <Link href="/support" className="hover:text-white transition-colors">
+            <span className="text-slate-600 font-light">|</span>
+            <Link href="/support" className="text-slate-200 hover:text-white transition-colors">
               고객센터
             </Link>
           </div>
