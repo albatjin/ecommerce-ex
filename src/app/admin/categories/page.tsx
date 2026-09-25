@@ -16,3 +16,4 @@ export default async function AdminCategoriesPage() {
 
   return <AdminCategoryListViewer initialTree={tree} />;
 }
+

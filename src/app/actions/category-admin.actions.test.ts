@@ -162,3 +162,4 @@ describe('category-admin.actions', () => {
     expect(mockUpdate).toHaveBeenCalled();
   });
 });
+

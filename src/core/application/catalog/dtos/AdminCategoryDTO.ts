@@ -31,3 +31,4 @@ export interface ReorderCategoryItemDTO {
   id: string;
   sortOrder: number;
 }
+
