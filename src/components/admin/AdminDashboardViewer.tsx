@@ -18,13 +18,20 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import type { AdminDashboardDTO } from '@/core/application/admin/dtos/AdminDashboardDTO';
+import type { AdminSalesAnalyticsDTO } from '@/core/application/admin/dtos/AdminSalesAnalyticsDTO';
 import { STATUS_STYLE_MAP } from '@/components/user/OrderListViewer';
+import { AdminSalesChart } from './AdminSalesChart';
+import { OrderStatusPipeline } from './OrderStatusPipeline';
 
 interface AdminDashboardViewerProps {
   initialData: AdminDashboardDTO;
+  initialAnalytics?: AdminSalesAnalyticsDTO;
 }
 
-export function AdminDashboardViewer({ initialData }: AdminDashboardViewerProps) {
+export function AdminDashboardViewer({
+  initialData,
+  initialAnalytics,
+}: AdminDashboardViewerProps) {
   const {
     totalRevenue,
     todayRevenue,
@@ -262,7 +269,22 @@ export function AdminDashboardViewer({ initialData }: AdminDashboardViewerProps)
         </Link>
       </div>
 
-      {/* 4. 최근 주문 및 답변 대기 1:1 문의 2열 그리드 */}
+      {/* 4. 일별 매출 추이 차트 및 주문 상태 파이프라인 (Stage 34) */}
+      {initialAnalytics && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <AdminSalesChart initialData={initialAnalytics} />
+          </div>
+          <div>
+            <OrderStatusPipeline
+              pipeline={initialAnalytics.statusPipeline}
+              totalOrders={initialAnalytics.totalOrdersInPipeline}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 5. 최근 주문 및 답변 대기 1:1 문의 2열 그리드 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 좌측 2열: 최근 실시간 주문 현황 (5건) */}
         <div className="lg:col-span-2 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">

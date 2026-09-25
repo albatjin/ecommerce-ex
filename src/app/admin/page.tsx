@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
-import { getAdminDashboardSummaryAction } from '@/app/actions/admin.actions';
+import {
+  getAdminDashboardSummaryAction,
+  getAdminSalesAnalyticsAction,
+} from '@/app/actions/admin.actions';
 import { AdminDashboardViewer } from '@/components/admin/AdminDashboardViewer';
 
 export const metadata: Metadata = {
@@ -11,9 +14,12 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function AdminDashboardPage() {
-  const result = await getAdminDashboardSummaryAction();
+  const [summaryResult, analyticsResult] = await Promise.all([
+    getAdminDashboardSummaryAction(),
+    getAdminSalesAnalyticsAction('7d'),
+  ]);
 
-  const defaultData = {
+  const defaultSummary = {
     totalRevenue: 0,
     todayRevenue: 0,
     totalOrdersCount: 0,
@@ -28,7 +34,26 @@ export default async function AdminDashboardPage() {
     generatedAt: new Date().toISOString(),
   };
 
-  const dashboardData = result.success && result.data ? result.data : defaultData;
+  const defaultAnalytics = {
+    period: '7d' as const,
+    dailyTrend: [],
+    totalPeriodSales: 0,
+    averageDailySales: 0,
+    maxDailySales: 0,
+    statusPipeline: [],
+    totalOrdersInPipeline: 0,
+    generatedAt: new Date().toISOString(),
+  };
 
-  return <AdminDashboardViewer initialData={dashboardData} />;
+  const dashboardData =
+    summaryResult.success && summaryResult.data ? summaryResult.data : defaultSummary;
+  const analyticsData =
+    analyticsResult.success && analyticsResult.data ? analyticsResult.data : defaultAnalytics;
+
+  return (
+    <AdminDashboardViewer
+      initialData={dashboardData}
+      initialAnalytics={analyticsData}
+    />
+  );
 }

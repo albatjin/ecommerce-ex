@@ -5,7 +5,9 @@ import { SupabaseOrderRepository } from '@/core/infrastructure/repositories/Supa
 import { SupabaseInquiryRepository } from '@/core/infrastructure/repositories/SupabaseInquiryRepository';
 import {
   GetAdminDashboardSummaryUseCase,
+  GetAdminSalesAnalyticsUseCase,
   type AdminDashboardDTO,
+  type AdminSalesAnalyticsDTO,
 } from '@/core/application/admin';
 
 export interface AdminActionResult<T> {
@@ -62,6 +64,56 @@ export async function getAdminDashboardSummaryAction(): Promise<
         error instanceof Error
           ? error.message
           : '대시보드 통계를 조회하는 중 오류가 발생했습니다.',
+    };
+  }
+}
+
+/**
+ * 관리자 일별 매출 추이 및 주문 상태 파이프라인 분석 조회 Server Action
+ */
+export async function getAdminSalesAnalyticsAction(
+  period: '7d' | '30d' = '7d'
+): Promise<AdminActionResult<AdminSalesAnalyticsDTO>> {
+  try {
+    const supabase = await getServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const userRole = user?.user_metadata?.role || user?.app_metadata?.role || 'admin';
+    const allowedRoles = ['super_admin', 'admin', 'manager', 'staff'];
+    const isAdmin = allowedRoles.includes(userRole);
+
+    if (user && !isAdmin) {
+      return {
+        success: false,
+        error: '관리자 전용 기능에 접근할 수 있는 권한이 없습니다.',
+      };
+    }
+
+    const orderRepo = new SupabaseOrderRepository(supabase);
+    const useCase = new GetAdminSalesAnalyticsUseCase(orderRepo);
+
+    const result = await useCase.execute({ period });
+
+    if (result.isFailure) {
+      return {
+        success: false,
+        error: result.getError().message,
+      };
+    }
+
+    return {
+      success: true,
+      data: result.getValue(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : '매출 분석 데이터를 조회하는 중 오류가 발생했습니다.',
     };
   }
 }

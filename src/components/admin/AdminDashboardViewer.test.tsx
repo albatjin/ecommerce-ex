@@ -99,4 +99,29 @@ describe('AdminDashboardViewer Component', () => {
     expect(screen.getByText('김철수')).toBeDefined();
     expect(screen.getByText('배송 문의')).toBeDefined();
   });
+
+  it('initialAnalytics가 전달되면 매출 추이 차트와 주문 파이프라인 컴포넌트를 렌더링한다', () => {
+    const sampleAnalytics = {
+      period: '7d' as const,
+      dailyTrend: [{ date: '2026-09-25', label: '9/25 (금)', sales: 180000, orderCount: 5 }],
+      totalPeriodSales: 180000,
+      averageDailySales: 25714,
+      maxDailySales: 180000,
+      statusPipeline: [
+        { status: 'PAID' as const, label: '결제완료', count: 10, percentage: 50.0, color: 'bg-blue-500' },
+      ],
+      totalOrdersInPipeline: 20,
+      generatedAt: '2026-09-25T12:00:00.000Z',
+    };
+
+    render(
+      <AdminDashboardViewer
+        initialData={sampleData}
+        initialAnalytics={sampleAnalytics}
+      />
+    );
+
+    expect(screen.getByText('일별 매출 추이 분석')).toBeDefined();
+    expect(screen.getByText('주문 상태별 파이프라인')).toBeDefined();
+  });
 });
