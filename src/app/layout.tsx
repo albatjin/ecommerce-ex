@@ -32,8 +32,31 @@ export default async function RootLayout({
 
     if (user) {
       userName = user.user_metadata?.name || user.email?.split('@')[0] || null;
-      const role = (user.user_metadata?.role || user.app_metadata?.role || 'customer') as UserRole;
-      isAdmin = ['super_admin', 'admin', 'manager', 'staff'].includes(role);
+      let role = (user.user_metadata?.role || user.app_metadata?.role) as UserRole | undefined;
+
+      // 1. Supabase users 테이블에서 실제 role 조회 (user_metadata에 role이 없을 경우 대비)
+      if (!role) {
+        try {
+          const { data: dbUser } = await supabase
+            .from('users')
+            .select('name, role')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (dbUser) {
+            role = dbUser.role as UserRole;
+            if (dbUser.name) userName = dbUser.name;
+          }
+        } catch {
+          // 조회 실패 시 안전하게 기본값 유지
+        }
+      }
+
+      // 2. 이메일 기반 관리자 폴백 검사 (admin@ 또는 아이디에 admin 포함된 경우)
+      const email = user.email?.toLowerCase() || '';
+      const isEmailAdmin = email.startsWith('admin@') || email.includes('admin');
+
+      isAdmin = ['super_admin', 'admin', 'manager', 'staff'].includes(role || 'customer') || isEmailAdmin;
     }
 
     const [categoryResult, cartResult] = await Promise.all([

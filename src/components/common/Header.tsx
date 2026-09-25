@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, User, Search, Menu, UserPlus, LogOut, X } from 'lucide-react';
+import { ShoppingBag, User, Search, Menu, UserPlus, LogOut, X, ShieldCheck, LayoutDashboard } from 'lucide-react';
 import { signOutAction } from '@/app/actions/auth.actions';
 import { CategoryDropdown } from '@/components/catalog/CategoryDropdown';
 import { useCart } from '@/components/cart/CartContext';
@@ -35,15 +35,19 @@ export function Header({
           <div className="flex items-center gap-3.5 text-slate-400 text-[11px]">
             {isAdmin && (
               <>
-                <Link href="/admin" className="text-amber-400 hover:text-amber-300 font-semibold">
+                <Link
+                  href="/admin"
+                  className="inline-flex items-center gap-1 text-amber-300 hover:text-amber-200 font-bold bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/40 transition-colors"
+                >
+                  <ShieldCheck className="w-3 h-3 text-amber-400" />
                   관리자 콘솔
                 </Link>
                 <span className="text-slate-700">|</span>
-                <Link href="/admin/claims" className="text-amber-400/80 hover:text-amber-300">
+                <Link href="/admin/claims" className="text-amber-400/90 hover:text-amber-300">
                   클레임관리
                 </Link>
                 <span className="text-slate-700">|</span>
-                <Link href="/admin/inquiries" className="text-amber-400/80 hover:text-amber-300">
+                <Link href="/admin/inquiries" className="text-amber-400/90 hover:text-amber-300">
                   문의관리
                 </Link>
                 <span className="text-slate-700">|</span>
@@ -177,6 +181,18 @@ export function Header({
             </div>
           )}
 
+          {/* 관리자 콘솔 바로가기 (관리자 권한인 경우 눈에 띄게 노출) */}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:hover:bg-amber-900 border border-amber-300 dark:border-amber-700/60 transition-colors shadow-xs"
+              title="관리자 콘솔 대시보드로 이동"
+            >
+              <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span className="hidden sm:inline">관리자 콘솔</span>
+            </Link>
+          )}
+
           {/* 장바구니 아이콘 & 카운트 배지 */}
           <button
             type="button"
@@ -196,33 +212,87 @@ export function Header({
 
       {/* 3. 하단 GNB 내비게이션 바 (데스크톱) */}
       <nav className="border-t border-slate-100 dark:border-slate-800/60 hidden md:block">
-        <div className="container-custom flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300 py-2">
-          {/* 전체 카테고리 드롭다운 */}
-          <CategoryDropdown categories={categories} />
+        <div className="container-custom flex items-center justify-between py-2">
+          <div className="flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-300">
+            {/* 전체 카테고리 드롭다운 */}
+            <CategoryDropdown categories={categories} />
 
-          <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
 
-          <Link href="/products" className="text-blue-600 font-bold hover:underline">
-            전체 상품
-          </Link>
-          <Link href="/products?sort=best" className="hover:text-blue-600 transition-colors">
-            베스트
-          </Link>
-          <Link href="/products?sort=new" className="hover:text-blue-600 transition-colors">
-            신상품
-          </Link>
-          <Link href="/products?filter=discount" className="hover:text-blue-600 transition-colors">
-            특가세일
-          </Link>
-          <Link href="/events" className="hover:text-blue-600 transition-colors">
-            기획전
-          </Link>
+            <Link href="/products" className="text-blue-600 font-bold hover:underline">
+              전체 상품
+            </Link>
+            <Link href="/products?sort=best" className="hover:text-blue-600 transition-colors">
+              베스트
+            </Link>
+            <Link href="/products?sort=new" className="hover:text-blue-600 transition-colors">
+              신상품
+            </Link>
+            <Link href="/products?filter=discount" className="hover:text-blue-600 transition-colors">
+              특가세일
+            </Link>
+            <Link href="/events" className="hover:text-blue-600 transition-colors">
+              기획전
+            </Link>
+          </div>
+
+          {/* 데스크톱 GNB 우측 관리자 대시보드 배지 탭 */}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-sm transition-all"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span>관리자 대시보드</span>
+            </Link>
+          )}
         </div>
       </nav>
 
       {/* 4. 모바일 내비게이션 드로어 */}
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-4 space-y-4 animate-in slide-in-from-top-2 duration-150">
+          {/* 모바일 관리자 빠른 접속 카드 */}
+          {isAdmin && (
+            <div className="p-3 bg-linear-to-r from-amber-500/15 via-amber-500/5 to-transparent rounded-xl border border-amber-300 dark:border-amber-700/60 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" /> 관리자 모드
+                </span>
+                <Link
+                  href="/admin"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline"
+                >
+                  대시보드 바로가기 →
+                </Link>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 pt-1 text-xs">
+                <Link
+                  href="/admin"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-1.5 px-2 rounded-lg bg-white dark:bg-slate-800 font-semibold text-slate-800 dark:text-slate-200 border border-amber-200 dark:border-amber-800/40 text-center hover:bg-amber-50"
+                >
+                  대시보드
+                </Link>
+                <Link
+                  href="/admin/claims"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-1.5 px-2 rounded-lg bg-white dark:bg-slate-800 font-semibold text-slate-800 dark:text-slate-200 border border-amber-200 dark:border-amber-800/40 text-center hover:bg-amber-50"
+                >
+                  클레임
+                </Link>
+                <Link
+                  href="/admin/inquiries"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="py-1.5 px-2 rounded-lg bg-white dark:bg-slate-800 font-semibold text-slate-800 dark:text-slate-200 border border-amber-200 dark:border-amber-800/40 text-center hover:bg-amber-50"
+                >
+                  1:1 문의
+                </Link>
+              </div>
+            </div>
+          )}
+
           <form action="/products" method="GET" className="relative">
             <input
               type="text"

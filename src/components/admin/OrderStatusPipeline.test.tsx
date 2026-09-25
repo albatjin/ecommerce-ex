@@ -45,3 +45,4 @@ describe('OrderStatusPipeline Component', () => {
     expect(paidCard?.getAttribute('href')).toBe('/admin/orders');
   });
 });
+

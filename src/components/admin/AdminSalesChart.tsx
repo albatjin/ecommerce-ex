@@ -211,3 +211,4 @@ export function AdminSalesChart({ initialData }: AdminSalesChartProps) {
     </div>
   );
 }
+

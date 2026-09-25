@@ -31,14 +31,16 @@ describe('Header Component', () => {
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
-  it('관리자 권한(isAdmin=true)일 때는 상단에 관리자 콘솔 링크가 노출된다', () => {
+  it('관리자 권한(isAdmin=true)일 때는 상단 및 GNB에 관리자 콘솔 및 대시보드 링크가 노출된다', () => {
     render(<Header isAdmin={true} />);
-    expect(screen.getByText('관리자 콘솔')).toBeInTheDocument();
+    expect(screen.getAllByText('관리자 콘솔').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('관리자 대시보드')).toBeInTheDocument();
   });
 
-  it('일반 사용자(isAdmin=false)일 때는 관리자 콘솔 링크가 노출되지 않는다', () => {
+  it('일반 사용자(isAdmin=false)일 때는 관리자 콘솔 및 대시보드 링크가 노출되지 않는다', () => {
     render(<Header isAdmin={false} />);
     expect(screen.queryByText('관리자 콘솔')).not.toBeInTheDocument();
+    expect(screen.queryByText('관리자 대시보드')).not.toBeInTheDocument();
   });
 
   it('GNB에 전체 카테고리 드롭다운 트리거가 렌더링된다', () => {
