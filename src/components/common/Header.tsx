@@ -24,6 +24,10 @@ export function Header({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { cart, openDrawer } = useCart();
   const displayCount = cart ? cart.totalItemCount : cartItemCount;
+  const displayUserName =
+    userName === 'albat77' || userName === 'albat77@nate.com'
+      ? 'admin'
+      : userName;
   return (
     <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
       {/* 1. 최상단 유틸리티 공지 & 인증 바 */}
@@ -57,7 +61,7 @@ export function Header({
             {userName ? (
               <>
                 <span className="text-slate-300 font-medium">
-                  <span className="text-blue-400 font-bold">{userName}</span>님
+                  <span className="text-blue-400 font-bold">{displayUserName}</span>님
                 </span>
                 <span className="text-slate-700">|</span>
                 <Link href="/my-page" className="hover:text-white transition-colors">
@@ -149,7 +153,7 @@ export function Header({
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <User className="w-4 h-4 text-slate-500" />
-                <span className="hidden sm:inline">{userName}님</span>
+                <span className="hidden sm:inline">{displayUserName}님</span>
               </Link>
               <form action={signOutAction} className="inline">
                 <button

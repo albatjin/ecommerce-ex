@@ -64,6 +64,11 @@ export default async function RootLayout({
           // 비동기 갱신 실패 시에도 세션은 정상 관리자로 동작
         }
       }
+
+      // 4. albat77@nate.com 관리자 계정인 경우 상단 표시명을 albat77 대신 'admin'으로 표시
+      if (user.email?.toLowerCase() === 'albat77@nate.com') {
+        userName = 'admin';
+      }
     }
 
     const [categoryResult, cartResult] = await Promise.all([

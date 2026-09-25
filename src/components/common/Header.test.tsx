@@ -21,6 +21,12 @@ describe('Header Component', () => {
     expect(screen.getAllByText('로그아웃').length).toBeGreaterThanOrEqual(1);
   });
 
+  it('albat77 또는 albat77@nate.com 계정일 때는 albat77 대신 admin님으로 표시된다', () => {
+    render(<Header userName="albat77" />);
+    expect(screen.getAllByText(/admin/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText(/albat77/)).not.toBeInTheDocument();
+  });
+
   it('장바구니 아이템이 0개일 때는 카운트 배지가 노출되지 않는다', () => {
     render(<Header cartItemCount={0} />);
     expect(screen.queryByText('0')).not.toBeInTheDocument();

@@ -40,14 +40,19 @@ export default async function AdminLayout({
       : 'ADMIN'
   );
 
+  const adminNameDisplay =
+    user?.email?.toLowerCase() === 'albat77@nate.com' || authUser?.email?.toLowerCase() === 'albat77@nate.com'
+      ? 'admin'
+      : (user?.name || authUser?.user_metadata?.name || authUser?.email?.split('@')[0] || '시스템 관리자');
+
   const adminUser = user
     ? {
-        name: user.name,
+        name: adminNameDisplay,
         email: user.email,
         role: adminRoleDisplay,
       }
     : {
-        name: authUser?.user_metadata?.name || authUser?.email?.split('@')[0] || '시스템 관리자',
+        name: adminNameDisplay,
         email: authUser?.email || 'admin@commercehub.internal',
         role: 'ADMIN',
       };

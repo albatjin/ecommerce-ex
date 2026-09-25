@@ -70,3 +70,4 @@ export function checkIsAdmin(params: {
 
   return false;
 }
+
