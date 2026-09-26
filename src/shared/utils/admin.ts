@@ -39,12 +39,8 @@ export function isEmailAdmin(email?: string | null): boolean {
     if (list.includes(normalized)) return true;
   }
 
-  // 3. albat 계열 및 admin 패턴 매칭
-  if (
-    normalized.startsWith('admin@') ||
-    normalized.includes('admin') ||
-    normalized.startsWith('albat')
-  ) {
+  // 3. 내부 시스템 및 테스트용 도메인 매칭
+  if (normalized.endsWith('@commercehub.internal')) {
     return true;
   }
 

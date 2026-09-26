@@ -25,7 +25,7 @@ export function Header({
   const { cart, openDrawer } = useCart();
   const displayCount = cart ? cart.totalItemCount : cartItemCount;
   const displayUserName =
-    userName === 'albat77' || userName === 'albat77@nate.com'
+    isAdmin && (userName === 'albat77' || userName === 'albat77@nate.com')
       ? 'admin'
       : userName;
   return (

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { SupabaseUserRepository } from '@/core/infrastructure/repositories/SupabaseUserRepository';
 import { GetCurrentUserUseCase } from '@/core/application/auth';
 import { AdminShell } from '@/components/admin/AdminShell';
@@ -33,6 +34,10 @@ export default async function AdminLayout({
     role: user?.role,
     email: user?.email || authUser?.email,
   });
+
+  if (!isCurrentAdmin) {
+    redirect('/?error=forbidden');
+  }
 
   const adminRoleDisplay = (
     user && ['super_admin', 'admin', 'manager', 'staff'].includes(user.role.toLowerCase())

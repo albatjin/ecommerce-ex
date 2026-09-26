@@ -8,7 +8,7 @@ import { getCartAction } from '@/app/actions/cart.actions';
 import type { UserRole } from '@/shared/types/database.types';
 import type { CategoryTreeNode } from '@/core/application/catalog/dtos/CategoryTreeDTO';
 import type { CartDTO } from '@/core/application/cart/dtos/CartDTO';
-import { checkIsAdmin } from '@/shared/utils/admin';
+import { checkIsAdmin, isEmailAdmin } from '@/shared/utils/admin';
 
 export const metadata: Metadata = {
   title: 'aramdream store | 프리미엄 이커머스 셀렉트숍',
@@ -52,8 +52,21 @@ export default async function RootLayout({
         // 조회 실패 시 안전하게 기본값 유지
       }
 
+      // 1.5. 관리자 지정 이메일이 아닌 일반 가입자인데 DB에 admin으로 잘못 설정되어 있는 경우 customer로 자동 복원
+      if (!isEmailAdmin(user.email) && role === 'customer' && dbRole === 'admin') {
+        try {
+          await supabase.from('users').update({ role: 'customer' }).eq('id', user.id);
+          dbRole = 'customer';
+        } catch {
+          // 비동기 갱신 실패 시에도 세션은 정상 customer로 동작
+        }
+      }
+
       // 2. 통합 관리자 권한 판별 (역할 및 albat77@nate.com 등 등록된 관리자 이메일)
-      const effectiveRole = role || dbRole;
+      let effectiveRole = role || dbRole;
+      if (!isEmailAdmin(user.email) && role === 'customer') {
+        effectiveRole = 'customer';
+      }
       isAdmin = checkIsAdmin({ role: effectiveRole, email: user.email });
 
       // 3. 관리자 계정인데 DB 역할이 customer로 저장되어 있는 경우 admin으로 자동 동기화

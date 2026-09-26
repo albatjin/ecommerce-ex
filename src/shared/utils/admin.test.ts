@@ -8,17 +8,15 @@ describe('Admin Utility Helper', () => {
       expect(isEmailAdmin('ALBAT77@NATE.COM')).toBe(true);
     });
 
-    it('admin 계열 이메일은 관리자로 판별되어야 한다', () => {
+    it('지정된 관리자 및 내부 시스템 계정은 관리자로 판별되어야 한다', () => {
       expect(isEmailAdmin('admin@commercehub.internal')).toBe(true);
-      expect(isEmailAdmin('admin@company.com')).toBe(true);
-      expect(isEmailAdmin('superadmin@naver.com')).toBe(true);
+      expect(isEmailAdmin('admin@example.com')).toBe(true);
     });
 
-    it('albat으로 시작하는 이메일은 관리자로 판별되어야 한다', () => {
-      expect(isEmailAdmin('albatjin@gmail.com')).toBe(true);
-    });
-
-    it('일반 고객 이메일은 관리자가 아니어야 한다', () => {
+    it('albat77@naver.com 등 일반 고객 이메일은 관리자가 아니어야 한다', () => {
+      expect(isEmailAdmin('albat77@naver.com')).toBe(false);
+      expect(isEmailAdmin('albatjin@gmail.com')).toBe(false);
+      expect(isEmailAdmin('superadmin@naver.com')).toBe(false);
       expect(isEmailAdmin('user@example.com')).toBe(false);
       expect(isEmailAdmin('customer123@daum.net')).toBe(false);
       expect(isEmailAdmin('')).toBe(false);
@@ -39,7 +37,8 @@ describe('Admin Utility Helper', () => {
       expect(checkIsAdmin({ role: 'customer', email: 'albat77@nate.com' })).toBe(true);
     });
 
-    it('역할이 customer이고 일반 이메일이면 관리자가 아니다', () => {
+    it('역할이 customer이고 albat77@naver.com 등 일반 이메일이면 관리자가 아니다', () => {
+      expect(checkIsAdmin({ role: 'customer', email: 'albat77@naver.com' })).toBe(false);
       expect(checkIsAdmin({ role: 'customer', email: 'buyer@test.com' })).toBe(false);
     });
   });

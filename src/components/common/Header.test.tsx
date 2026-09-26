@@ -22,7 +22,7 @@ describe('Header Component', () => {
   });
 
   it('albat77 또는 albat77@nate.com 계정일 때는 albat77 대신 admin님으로 표시된다', () => {
-    render(<Header userName="albat77" />);
+    render(<Header userName="albat77" isAdmin={true} />);
     expect(screen.getAllByText(/admin/).length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText(/albat77/)).not.toBeInTheDocument();
   });
