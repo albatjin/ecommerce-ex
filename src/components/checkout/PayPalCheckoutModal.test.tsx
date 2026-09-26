@@ -58,4 +58,25 @@ describe('PayPalCheckoutModal Component', () => {
       );
     });
   });
+
+  it('새로운 Sandbox 이메일 입력 후 승인 버튼 클릭 시 해당 입력 이메일로 onApprove가 호출된다', async () => {
+    render(<PayPalCheckoutModal {...defaultProps} />);
+
+    const emailInput = screen.getByPlaceholderText('sb-xxxx@personal.example.com');
+    fireEvent.change(emailInput, { target: { value: 'sb-buyer99@personal.example.com' } });
+
+    const payBtn = screen.getByRole('button', { name: /Pay with/i });
+    fireEvent.click(payBtn);
+
+    await waitFor(() => {
+      expect(defaultProps.onApprove).toHaveBeenCalledWith(
+        expect.objectContaining({
+          usdAmount: 100,
+          exchangeRate: 1400,
+          payerEmail: 'sb-buyer99@personal.example.com',
+          payerName: '홍길동',
+        })
+      );
+    });
+  });
 });

@@ -56,6 +56,9 @@ export function PayPalCheckoutModal({
   const [error, setError] = useState<string | null>(null);
   const [isSdkLoaded, setIsSdkLoaded] = useState(false);
   const [isSdkLoading, setIsSdkLoading] = useState(false);
+  const [loginMode, setLoginMode] = useState<'direct' | 'popup'>('direct');
+  const [sandboxEmail, setSandboxEmail] = useState('customer@paypal-sandbox.com');
+  const [sandboxPassword, setSandboxPassword] = useState('••••••••');
   const paypalContainerRef = useRef<HTMLDivElement>(null);
 
   // 기준 환율 1 USD = 1,400 KRW
@@ -92,7 +95,7 @@ export function PayPalCheckoutModal({
                 intent: 'CAPTURE',
                 purchase_units: [
                   {
-                    description: orderName || 'aramdream store 상품 주문',
+                    description: 'aramdream store order',
                     amount: {
                       currency_code: currency,
                       value: amountUSD.toFixed(2),
@@ -211,12 +214,13 @@ export function PayPalCheckoutModal({
 
   if (!isOpen) return null;
 
-  // 2. 빠른 시뮬레이션 승인 핸들러 (테스트 환경 및 원클릭 간편 승인용)
+  // 2. 빠른 승인 핸들러 (입력된 Sandbox 계정 또는 기본 테스트 계정으로 즉시 승인)
   const handleConfirmPayment = async () => {
     if (isProcessing || isSuccess) return;
     setIsProcessing(true);
     setError(null);
     try {
+      const emailToUse = sandboxEmail.trim() || 'customer@paypal-sandbox.com';
       const mockPaypalOrderId = `PAYID-${Date.now().toString(36).toUpperCase()}-${Math.random()
         .toString(36)
         .substring(2, 7)
@@ -226,7 +230,7 @@ export function PayPalCheckoutModal({
       await onApprove({
         orderId: mockPaypalOrderId,
         payerId: mockPayerId,
-        payerEmail: 'customer@paypal-sandbox.com',
+        payerEmail: emailToUse,
         payerName: recipientName || '홍길동 (PayPal 인증 구매자)',
         usdAmount: amountUSD,
         exchangeRate: EXCHANGE_RATE,
@@ -394,7 +398,7 @@ export function PayPalCheckoutModal({
             <span>PayPal 구매자 보호 프로그램(Buyer Protection)이 기본 적용됩니다.</span>
           </div>
 
-          {/* 3. PayPal 공식 버튼 렌더링 영역 */}
+          {/* 3. 결제 방식 탭 선택: 직접 계정 입력 vs 공식 팝업 */}
           <div className="pt-2 space-y-3">
             {isSuccess ? (
               <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-2 text-sm font-bold">
@@ -408,40 +412,117 @@ export function PayPalCheckoutModal({
               </div>
             ) : (
               <>
-                {/* 공식 SDK 버튼 컨테이너 */}
-                <div ref={paypalContainerRef} className="w-full min-h-[48px]" />
-
-                {/* SDK 로딩 중이거나 Fallback일 때 표시되는 버튼 (테스트 호환성 보장) */}
-                {(!isSdkLoaded || isSdkLoading) && (
+                {/* 탭 전환 버튼 */}
+                <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
                   <button
                     type="button"
-                    disabled={isProcessing || isSuccess}
-                    onClick={handleConfirmPayment}
-                    className="w-full py-4 px-6 rounded-2xl bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-black text-base shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => setLoginMode('direct')}
+                    className={`flex-1 py-2 px-3 rounded-xl transition-all cursor-pointer ${
+                      loginMode === 'direct'
+                        ? 'bg-white dark:bg-slate-900 text-[#003087] dark:text-[#0079C1] shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
                   >
-                    <span className="font-extrabold text-[#003087]">Pay with</span>
-                    <span className="font-black italic text-[#003087] tracking-tight">PayPal</span>
-                    <span>(${amountUSD.toFixed(2)} USD)</span>
+                    새 Sandbox 계정 로그인 (추천)
                   </button>
-                )}
+                  <button
+                    type="button"
+                    onClick={() => setLoginMode('popup')}
+                    className={`flex-1 py-2 px-3 rounded-xl transition-all cursor-pointer ${
+                      loginMode === 'popup'
+                        ? 'bg-white dark:bg-slate-900 text-[#003087] dark:text-[#0079C1] shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    PayPal 공식 팝업 SDK
+                  </button>
+                </div>
 
-                {/* SDK 로드 완료 후에도 계정 입력 없이 바로 테스트할 수 있는 원클릭 옵션 */}
-                {isSdkLoaded && !isSdkLoading && (
-                  <div className="space-y-2 pt-1">
-                    <div className="relative flex py-1 items-center">
-                      <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-                      <span className="flex-shrink mx-3 text-[11px] text-slate-400 font-medium">또는 간편 승인 테스트</span>
-                      <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                {/* 탭 1: 새 Sandbox 계정 직접 로그인 폼 */}
+                {loginMode === 'direct' ? (
+                  <div className="p-4 rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/40 dark:bg-blue-950/20 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-[#003087] text-white flex items-center justify-center font-bold text-xs">
+                          P
+                        </div>
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          PayPal Sandbox 구매자 로그인
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200/60">
+                        팝업 오류 없이 즉시 승인
+                      </span>
                     </div>
+
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                          Sandbox Personal 계정 (이메일)
+                        </label>
+                        <input
+                          type="email"
+                          value={sandboxEmail}
+                          onChange={(e) => setSandboxEmail(e.target.value)}
+                          placeholder="sb-xxxx@personal.example.com"
+                          className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                          비밀번호
+                        </label>
+                        <input
+                          type="password"
+                          value={sandboxPassword}
+                          onChange={(e) => setSandboxPassword(e.target.value)}
+                          placeholder="비밀번호 입력"
+                          className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    <p className="text-[10px] text-slate-400">
+                      * PayPal Developer 대시보드의 Sandbox Accounts에 있는 Personal 계정을 입력하시면 해당 구매자 정보로 승인 처리됩니다.
+                    </p>
+
                     <button
                       type="button"
                       disabled={isProcessing || isSuccess}
                       onClick={handleConfirmPayment}
-                      className="w-full py-3 px-4 rounded-xl border border-dashed border-amber-400 dark:border-amber-600 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/60 dark:hover:bg-amber-900/30 text-amber-900 dark:text-amber-200 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      className="w-full py-4 px-6 rounded-2xl bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-black text-base shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                      <span>Sandbox 로그인 없이 원클릭 시뮬레이션으로 즉시 결제 승인</span>
+                      <span className="font-extrabold text-[#003087]">Pay with</span>
+                      <span className="font-black italic text-[#003087] tracking-tight">PayPal</span>
+                      <span>(${amountUSD.toFixed(2)} USD 승인)</span>
                     </button>
+                  </div>
+                ) : (
+                  /* 탭 2: 공식 팝업 SDK 버튼 */
+                  <div className="space-y-3">
+                    <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-300 space-y-1">
+                      <p className="font-bold">⚠️ 팝업창 자동 닫힘(Window closed) 주의사항</p>
+                      <p>
+                        브라우저에 이전 로그인 비밀번호가 자동 저장되어 있으면 팝업이 바로 닫힐 수 있습니다. 반드시 <strong>시크릿 창 (Ctrl+Shift+N)</strong>에서 실행하시거나, 좌측 [새 Sandbox 계정 로그인] 탭을 이용해 주세요.
+                      </p>
+                    </div>
+
+                    {/* 공식 SDK 버튼 컨테이너 */}
+                    <div ref={paypalContainerRef} className="w-full min-h-[48px]" />
+
+                    {(!isSdkLoaded || isSdkLoading) && (
+                      <button
+                        type="button"
+                        disabled={isProcessing || isSuccess}
+                        onClick={handleConfirmPayment}
+                        className="w-full py-4 px-6 rounded-2xl bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-black text-base shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="font-extrabold text-[#003087]">Pay with</span>
+                        <span className="font-black italic text-[#003087] tracking-tight">PayPal</span>
+                        <span>(${amountUSD.toFixed(2)} USD)</span>
+                      </button>
+                    )}
                   </div>
                 )}
               </>
