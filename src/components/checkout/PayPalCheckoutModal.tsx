@@ -143,7 +143,7 @@ export function PayPalCheckoutModal({
                   errorStr.includes('popup_close')
                 ) {
                   setError(
-                    'PayPal 결제창이 응답 전 닫혔습니다. (창을 닫으셨거나, Sandbox 환경에서 실제 개인 계정으로 로그인을 시도한 경우 발생합니다. Sandbox 테스트 계정으로 로그인하시거나 아래 [원클릭 테스트 시뮬레이션]으로 진행하실 수 있습니다.)'
+                    'PayPal 결제창이 이전 로그인 정보로 인해 자동 종료되었거나 응답 전 닫혔습니다. 새 sb-xxxx 계정 로그인을 위해 [이전 세션 로그아웃]을 누르시거나, 브라우저 시크릿 창(Ctrl+Shift+N)으로 접속해 주세요.'
                   );
                 } else {
                   setError('PayPal 결제 진행 중 오류가 발생했습니다. 다시 시도해 주세요.');
@@ -283,9 +283,22 @@ export function PayPalCheckoutModal({
         {/* 2. 결제 내용 요약 */}
         <div className="p-6 space-y-5">
           {error && (
-            <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
+            <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs space-y-2">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{error}</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pl-6 pt-1">
+                <a
+                  href="https://www.sandbox.paypal.com/myaccount/logout"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-[11px] shadow-xs transition-colors"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span>기존 PayPal 세션 로그아웃(초기화)</span>
+                </a>
+              </div>
             </div>
           )}
 
@@ -329,23 +342,38 @@ export function PayPalCheckoutModal({
               <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
             </div>
 
-            <div className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300 bg-white/70 dark:bg-slate-900/60 p-2.5 rounded-xl border border-blue-100 dark:border-blue-900/40">
-              <p className="font-semibold text-blue-800 dark:text-blue-300 mb-0.5">
-                💡 Sandbox 팝업 로그인 안내
-              </p>
-              <p>
-                현재는 <strong>Sandbox 개발 테스트 환경</strong>입니다. 실제 개인 PayPal 계정이 아닌,{' '}
+            <div className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300 bg-white/70 dark:bg-slate-900/60 p-3 rounded-xl border border-blue-100 dark:border-blue-900/40 space-y-2">
+              <div className="font-semibold text-blue-900 dark:text-blue-200">
+                💡 새로운 sb-xxxxx 테스트 계정으로 로그인하는 방법:
+              </div>
+              <ul className="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-300">
+                <li>
+                  <strong className="text-slate-800 dark:text-slate-100">가장 추천 (100% 빈 로그인창):</strong> 브라우저 <strong>시크릿 창 (Ctrl+Shift+N)</strong>에서 접속하시면 이전 로그인 캐시 없이 빈 계정 입력창이 바로 열립니다.
+                </li>
+                <li>
+                  <strong className="text-slate-800 dark:text-slate-100">이전 세션 로그아웃:</strong> 아래 버튼을 눌러 기존 PayPal Sandbox 로그인 세션을 해제하세요.
+                </li>
+              </ul>
+              <div className="pt-1 flex flex-wrap items-center gap-2">
+                <a
+                  href="https://www.sandbox.paypal.com/myaccount/logout"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 hover:bg-blue-200/80 dark:hover:bg-blue-800 px-2.5 py-1 rounded-lg transition-colors"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span>Sandbox 이전 세션 로그아웃(초기화)</span>
+                </a>
                 <a
                   href="https://developer.paypal.com/dashboard/accounts"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-blue-600 dark:text-blue-400 underline font-medium inline-flex items-center gap-0.5"
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:underline"
                 >
-                  developer.paypal.com
-                  <ExternalLink className="w-2.5 h-2.5" />
+                  <span>Sandbox Personal 계정/비번 확인</span>
+                  <ExternalLink className="w-3 h-3" />
                 </a>
-                의 <strong>Testing Tools &gt; Sandbox Accounts</strong>에 등록된 <em>Personal 구매자 계정</em>(예: <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[10px]">sb-xxxx@personal.example.com</code>)으로 로그인하셔야 승인됩니다. (실제 계정 입력 시 창이 닫힐 수 있습니다.)
-              </p>
+              </div>
             </div>
           </div>
 
