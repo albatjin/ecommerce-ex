@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { Building2, ShieldCheck, HeartHandshake, Sparkles, ArrowRight } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: '회사소개 | CommerceHub',
-  description: '최고의 쇼핑 경험을 제공하는 이커머스 플랫폼 CommerceHub 소개',
+  title: '회사소개 | aramdream store',
+  description: '최고의 쇼핑 경험을 제공하는 이커머스 플랫폼 aramdream store 소개',
 };
 
 export default function AboutPage() {
@@ -13,14 +13,14 @@ export default function AboutPage() {
       {/* Hero */}
       <div className="text-center max-w-2xl mx-auto space-y-4">
         <span className="px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 text-xs font-bold border border-blue-200 dark:border-blue-900">
-          About CommerceHub
+          About aramdream store
         </span>
         <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           더 스마트하고 즐거운 <br />
           <span className="text-blue-600">온라인 쇼핑의 새로운 표준</span>
         </h1>
         <p className="text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-          CommerceHub는 고객 중심의 혁신과 정직한 품질을 바탕으로 트렌디한 패션, 라이프스타일, 디지털 상품을 가장 빠르고 안전하게 제공합니다.
+          aramdream store는 고객 중심의 혁신과 정직한 품질을 바탕으로 트렌디한 패션, 라이프스타일, 디지털 상품을 가장 빠르고 안전하게 제공합니다.
         </p>
       </div>
 

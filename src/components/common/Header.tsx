@@ -124,11 +124,11 @@ export function Header({
 
           <Link href="/" className="flex items-center gap-2 group">
             <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-lg shadow-sm group-hover:bg-blue-700 transition-colors">
-              C
+              A
             </span>
             <div className="flex flex-col">
               <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white leading-tight">
-                Commerce<span className="text-blue-600">Hub</span>
+                aramdream <span className="text-blue-600">store</span>
               </span>
             </div>
           </Link>

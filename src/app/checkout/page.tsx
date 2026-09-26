@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-  title: '주문 / 결제 | CommerceHub',
+  title: '주문 / 결제 | aramdream store',
   description: '배송지 정보 및 결제 수단을 입력하고 주문을 완료하세요.',
 };
 

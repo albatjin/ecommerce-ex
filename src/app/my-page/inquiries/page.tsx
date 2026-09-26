@@ -18,7 +18,7 @@ import { getCustomerInquiriesAction } from '@/app/actions/inquiry.actions';
 import { InquiryListViewer } from '@/components/user/InquiryListViewer';
 
 export const metadata: Metadata = {
-  title: '1:1 고객 문의 | 마이페이지 | CommerceHub',
+  title: '1:1 고객 문의 | 마이페이지 | aramdream store',
   description: '1:1 고객 문의 내역을 확인하고 새로운 질문을 등록하세요.',
 };
 

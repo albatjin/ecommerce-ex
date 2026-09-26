@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: '이용약관 | CommerceHub',
-  description: 'CommerceHub 전자상거래 표준 이용약관',
+  title: '이용약관 | aramdream store',
+  description: 'aramdream store 전자상거래 표준 이용약관',
 };
 
 export default function TermsPage() {
   return (
     <div className="container-custom py-12 max-w-4xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">CommerceHub 전자상거래 이용약관</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">aramdream store 전자상거래 이용약관</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
           시행일자: 2026년 1월 1일 | 공정거래위원회 표준약관 준수
         </p>
@@ -19,7 +19,7 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-base font-bold text-slate-900 dark:text-white">제1조 (목적)</h2>
           <p>
-            이 약관은 CommerceHub Inc.(이하 &quot;회사&quot;라 함)가 운영하는 사이버 몰(이하 &quot;몰&quot;이라 함)에서 제공하는 인터넷 관련 전자상거래 서비스(이하 &quot;서비스&quot;라 함)를 이용함에 있어 사이버 몰과 이용자의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.
+            이 약관은 aramdream store(이하 &quot;회사&quot;라 함)가 운영하는 사이버 몰(이하 &quot;몰&quot;이라 함)에서 제공하는 인터넷 관련 전자상거래 서비스(이하 &quot;서비스&quot;라 함)를 이용함에 있어 사이버 몰과 이용자의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.
           </p>
         </section>
 

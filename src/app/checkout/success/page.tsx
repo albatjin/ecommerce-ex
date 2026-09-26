@@ -5,7 +5,7 @@ import { getOrderAction } from '@/app/actions/order.actions';
 import { OrderSuccessViewer } from '@/components/checkout';
 
 export const metadata: Metadata = {
-  title: '주문 완료 | CommerceHub',
+  title: '주문 완료 | aramdream store',
   description: '주문이 성공적으로 접수되었습니다. 영수증과 배송 정보를 확인하세요.',
 };
 

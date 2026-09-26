@@ -4,7 +4,7 @@ import { StoreSettings } from './StoreSettings';
 describe('StoreSettings Domain Entity', () => {
   it('기본 설정값으로 생성할 수 있다', () => {
     const settings = StoreSettings.createDefault();
-    expect(settings.storeName).toBe('CommerceHub 공식스토어');
+    expect(settings.storeName).toBe('aramdream store');
     expect(settings.defaultShippingFee).toBe(3000);
     expect(settings.freeShippingThreshold).toBe(50000);
     expect(settings.isOperating).toBe(true);

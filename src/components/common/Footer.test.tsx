@@ -5,7 +5,7 @@ import { Footer } from './Footer';
 describe('Footer Component', () => {
   it('쇼핑몰 상호명과 사업자 정보가 정상적으로 노출된다', () => {
     render(<Footer />);
-    expect(screen.getByText('CommerceHub 공식스토어')).toBeInTheDocument();
+    expect(screen.getByText('aramdream store')).toBeInTheDocument();
     expect(screen.getByText(/214-88-91204/)).toBeInTheDocument();
     expect(screen.getByText(/대표자: 김은영/)).toBeInTheDocument();
   });

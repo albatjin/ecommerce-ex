@@ -89,7 +89,7 @@ export function AdminSidebar({
             {!isCollapsed && (
               <div className="flex flex-col truncate">
                 <span className="font-extrabold text-sm text-white tracking-tight leading-tight">
-                  CommerceHub
+                  aramdream store
                 </span>
                 <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">
                   Admin Console

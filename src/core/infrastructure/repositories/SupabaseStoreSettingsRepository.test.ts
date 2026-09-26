@@ -72,7 +72,7 @@ describe('SupabaseStoreSettingsRepository', () => {
     const repo = new SupabaseStoreSettingsRepository(mockClient);
     const settings = await repo.getSettings();
 
-    expect(settings.storeName).toBe('CommerceHub 공식스토어');
+    expect(settings.storeName).toBe('aramdream store');
     expect(mockInsert).toHaveBeenCalledTimes(1);
   });
 

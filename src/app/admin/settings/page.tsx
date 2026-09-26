@@ -4,7 +4,7 @@ import { StoreSettingsViewer } from '@/components/admin/settings/StoreSettingsVi
 import type { StoreSettingsDTO } from '@/core/application/settings/dtos/StoreSettingsDTO';
 
 export const metadata: Metadata = {
-  title: '쇼핑몰 환경설정 | CommerceHub Admin',
+  title: '쇼핑몰 환경설정 | aramdream store Admin',
   description: '스토어 기본 정보, 배송 정책, 회원 혜택 및 운영 상태 관리',
 };
 
@@ -16,7 +16,7 @@ export default async function AdminSettingsPage() {
 
   const fallbackSettings: StoreSettingsDTO = {
     id: 'default',
-    storeName: 'CommerceHub 공식스토어',
+    storeName: 'aramdream store',
     representativeName: '김은영',
     businessNumber: '214-88-91204',
     ecommercePermitNumber: '2024-서울강남-03891호',

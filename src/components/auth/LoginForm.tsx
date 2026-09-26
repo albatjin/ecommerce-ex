@@ -55,7 +55,7 @@ export function LoginForm({ redirectTo = '/' }: LoginFormProps) {
           로그인
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-1.5">
-          CommerceHub 계정으로 편리한 쇼핑을 시작하세요
+          aramdream store 계정으로 편리한 쇼핑을 시작하세요
         </p>
       </div>
 

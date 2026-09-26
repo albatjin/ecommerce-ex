@@ -10,7 +10,7 @@ vi.mock('@/app/actions/settings.actions', () => ({
 
 const mockInitialSettings: StoreSettingsDTO = {
   id: 'default',
-  storeName: 'CommerceHub 공식스토어',
+  storeName: 'aramdream store',
   representativeName: '김은영',
   businessNumber: '214-88-91204',
   ecommercePermitNumber: '2024-서울강남-03891호',
@@ -44,7 +44,7 @@ describe('StoreSettingsViewer Component', () => {
     render(<StoreSettingsViewer initialSettings={mockInitialSettings} />);
 
     expect(screen.getByText('쇼핑몰 환경설정')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('CommerceHub 공식스토어')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('aramdream store')).toBeInTheDocument();
     expect(screen.getByDisplayValue('김은영')).toBeInTheDocument();
     expect(screen.getByDisplayValue('1588-4920')).toBeInTheDocument();
   });

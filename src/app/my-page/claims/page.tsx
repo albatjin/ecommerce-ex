@@ -16,7 +16,7 @@ import { getUserOrdersAction } from '@/app/actions/order.actions';
 import { OrderListViewer } from '@/components/user';
 
 export const metadata: Metadata = {
-  title: '취소 및 반품 내역 | 마이페이지 | CommerceHub',
+  title: '취소 및 반품 내역 | 마이페이지 | aramdream store',
   description: '주문 취소 및 반품/환불 처리 상태를 확인하세요.',
 };
 

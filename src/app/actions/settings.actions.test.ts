@@ -68,7 +68,7 @@ describe('Settings Server Actions', () => {
     it('환경설정 정보를 성공적으로 조회하여 반환한다', async () => {
       const result = await getStoreSettingsAction();
       expect(result.success).toBe(true);
-      expect(result.data?.storeName).toBe('CommerceHub 공식스토어');
+      expect(result.data?.storeName).toBe('aramdream store');
       expect(result.data?.defaultShippingFee).toBe(3000);
     });
   });

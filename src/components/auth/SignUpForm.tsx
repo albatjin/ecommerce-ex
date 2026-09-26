@@ -67,7 +67,7 @@ export function SignUpForm({ redirectTo = '/' }: SignUpFormProps) {
           회원가입 완료!
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
-          CommerceHub의 회원이 되신 것을 진심으로 환영합니다.<br />
+          aramdream store의 회원이 되신 것을 진심으로 환영합니다.<br />
           신규 가입 혜택으로 <span className="text-blue-600 font-bold">3,000원 적립금</span>이 지급되었습니다.
         </p>
         <Link

@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { LoginForm } from '@/components/auth';
 
 export const metadata: Metadata = {
-  title: '로그인 | CommerceHub',
-  description: 'CommerceHub 계정으로 로그인하고 프리미엄 쇼핑을 시작하세요.',
+  title: '로그인 | aramdream store',
+  description: 'aramdream store 계정으로 로그인하고 프리미엄 쇼핑을 시작하세요.',
 };
 
 export default async function LoginPage({

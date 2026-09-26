@@ -207,7 +207,7 @@ export function StoreSettingsViewer({ initialSettings }: StoreSettingsViewerProp
                   value={formData.storeName}
                   onChange={handleInputChange}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium focus:border-indigo-500 focus:outline-none"
-                  placeholder="예: CommerceHub 공식스토어"
+                  placeholder="예: aramdream store"
                 />
               </div>
 

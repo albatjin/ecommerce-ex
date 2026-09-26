@@ -62,7 +62,7 @@ export class StoreSettings extends Entity<StoreSettingsProps> {
 
   public static createDefault(): StoreSettings {
     return new StoreSettings({
-      storeName: 'CommerceHub 공식스토어',
+      storeName: 'aramdream store',
       representativeName: '김은영',
       businessNumber: '214-88-91204',
       ecommercePermitNumber: '2024-서울강남-03891호',

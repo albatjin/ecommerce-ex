@@ -5,7 +5,7 @@ import { MOCK_PRODUCTS } from '@/shared/data/mockProducts';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: '전체 상품 카탈로그 | CommerceHub',
+  title: '전체 상품 카탈로그 | aramdream store',
   description: '프리미엄 패션, 디지털, 리빙 라이프스타일 셀렉션',
 };
 

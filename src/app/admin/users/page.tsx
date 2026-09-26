@@ -3,7 +3,7 @@ import { getAdminUsersAction } from '@/app/actions/user-admin.actions';
 import { AdminUserListViewer } from '@/components/admin/users/AdminUserListViewer';
 
 export const metadata: Metadata = {
-  title: '회원 통합 관리 (CMS) | CommerceHub Admin',
+  title: '회원 통합 관리 (CMS) | aramdream store Admin',
   description: '회원 목록 조회, 등급 및 상태 변경, 적립금과 쿠폰 수동 지급 관리',
 };
 

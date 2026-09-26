@@ -5,10 +5,10 @@ import { AdminShell } from '@/components/admin/AdminShell';
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | CommerceHub Admin',
-    default: '관리자 콘솔 | CommerceHub',
+    template: '%s | aramdream store Admin',
+    default: '관리자 콘솔 | aramdream store',
   },
-  description: 'CommerceHub 쇼핑몰 통합 관리자 플랫폼',
+  description: 'aramdream store 쇼핑몰 통합 관리자 플랫폼',
 };
 
 export const dynamic = 'force-dynamic';

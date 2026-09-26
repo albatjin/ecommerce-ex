@@ -18,21 +18,21 @@ export async function generateMetadata({
 
   if (result.success && result.data) {
     return {
-      title: `${result.data.nameKo} | CommerceHub`,
-      description: result.data.description?.slice(0, 120) || 'CommerceHub 프리미엄 상품',
+      title: `${result.data.nameKo} | aramdream store`,
+      description: result.data.description?.slice(0, 120) || 'aramdream store 프리미엄 상품',
     };
   }
 
   const fallback = getMockProductDetail(id);
   if (fallback) {
     return {
-      title: `${fallback.nameKo} | CommerceHub`,
+      title: `${fallback.nameKo} | aramdream store`,
       description: fallback.description?.slice(0, 120),
     };
   }
 
   return {
-    title: '상품 상세 정보 | CommerceHub',
+    title: '상품 상세 정보 | aramdream store',
   };
 }
 

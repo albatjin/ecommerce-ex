@@ -6,7 +6,7 @@ import {
 import { AdminDashboardViewer } from '@/components/admin/AdminDashboardViewer';
 
 export const metadata: Metadata = {
-  title: '관리자 대시보드 | CommerceHub Admin',
+  title: '관리자 대시보드 | aramdream store Admin',
   description: '매출, 주문, 클레임 및 고객 문의 실시간 통합 관리',
 };
 

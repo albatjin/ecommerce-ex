@@ -11,7 +11,7 @@ import type { CartDTO } from '@/core/application/cart/dtos/CartDTO';
 import { checkIsAdmin } from '@/shared/utils/admin';
 
 export const metadata: Metadata = {
-  title: 'CommerceHub | 프리미엄 이커머스 셀렉트숍',
+  title: 'aramdream store | 프리미엄 이커머스 셀렉트숍',
   description: 'Next.js 16 + React 19 + Supabase SSR 기반의 엔터프라이즈급 이커머스 플랫폼',
 };
 

@@ -5,8 +5,8 @@ import { Header } from './Header';
 describe('Header Component', () => {
   it('브랜드 로고와 상호명이 올바르게 렌더링된다', () => {
     render(<Header />);
-    expect(screen.getByText('Commerce')).toBeInTheDocument();
-    expect(screen.getByText('Hub')).toBeInTheDocument();
+    expect(screen.getByText('aramdream')).toBeInTheDocument();
+    expect(screen.getByText('store')).toBeInTheDocument();
   });
 
   it('비로그인 상태일 때는 로그인 및 회원가입 버튼을 표시한다', () => {

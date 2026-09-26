@@ -16,7 +16,7 @@ describe('GetStoreSettingsUseCase', () => {
 
     expect(result.isSuccess).toBe(true);
     const dto = result.getValue();
-    expect(dto.storeName).toBe('CommerceHub 공식스토어');
+    expect(dto.storeName).toBe('aramdream store');
     expect(dto.defaultShippingFee).toBe(3000);
     expect(dto.freeShippingThreshold).toBe(50000);
     expect(dto.isOperating).toBe(true);

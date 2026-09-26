@@ -93,7 +93,7 @@ describe('Full-Cycle E2E Integration: Catalog -> Cart -> Order -> Payment -> Adm
 
     // 3. Store Settings
     settingsStore = StoreSettings.create({
-      storeName: 'CommerceHub 공식스토어',
+      storeName: 'aramdream store',
       representativeName: '김은영',
       businessNumber: '214-88-91204',
       ecommercePermitNumber: '2024-서울강남-03891호',
@@ -396,7 +396,7 @@ describe('Full-Cycle E2E Integration: Catalog -> Cart -> Order -> Payment -> Adm
     // -------------------------------------------------------------
     const updateSettingsUseCase = new UpdateStoreSettingsUseCase(mockStoreSettingsRepo);
     const updateSettingsResult = await updateSettingsUseCase.execute({
-      storeName: 'CommerceHub 글로벌 플래그십',
+      storeName: 'aramdream store 글로벌 플래그십',
       representativeName: settingsStore.representativeName,
       businessNumber: settingsStore.businessNumber,
       ecommercePermitNumber: settingsStore.ecommercePermitNumber,
@@ -416,7 +416,7 @@ describe('Full-Cycle E2E Integration: Catalog -> Cart -> Order -> Payment -> Adm
       welcomeReward: settingsStore.welcomeReward,
     });
     expect(updateSettingsResult.isSuccess).toBe(true);
-    expect(settingsStore.storeName).toBe('CommerceHub 글로벌 플래그십');
+    expect(settingsStore.storeName).toBe('aramdream store 글로벌 플래그십');
     expect(settingsStore.freeShippingThreshold).toBe(70000);
     expect(settingsStore.purchaseRewardRate).toBe(2.0);
   });

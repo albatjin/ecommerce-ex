@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: '개인정보처리방침 | CommerceHub',
-  description: 'CommerceHub 고객 개인정보 보호 및 처리 방침 안내',
+  title: '개인정보처리방침 | aramdream store',
+  description: 'aramdream store 고객 개인정보 보호 및 처리 방침 안내',
 };
 
 export default function PrivacyPage() {
   return (
     <div className="container-custom py-12 max-w-4xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">CommerceHub 개인정보처리방침</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">aramdream store 개인정보처리방침</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
           시행일자: 2026년 1월 1일 | 개인정보 보호법 준수
         </p>
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
           <h2 className="text-base font-bold text-slate-900 dark:text-white">3. 개인정보보호 책임자</h2>
           <p>
             - 책임자: 김은영 (개인정보보호 책임자)<br />
-            - 소속: CommerceHub 고객정보보안팀<br />
+            - 소속: aramdream store 고객정보보안팀<br />
             - 이메일: privacy@commercehub.co.kr | 고객센터: 1588-4920
           </p>
         </section>

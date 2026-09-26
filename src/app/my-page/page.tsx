@@ -20,7 +20,7 @@ import { getUserOrdersAction } from '@/app/actions/order.actions';
 import { ProfileForm, OrderListViewer } from '@/components/user';
 
 export const metadata: Metadata = {
-  title: '마이페이지 | CommerceHub',
+  title: '마이페이지 | aramdream store',
   description: '회원 등급, 적립금, 쿠폰 및 주문 배송 현황, 취소/반품을 관리하세요.',
 };
 

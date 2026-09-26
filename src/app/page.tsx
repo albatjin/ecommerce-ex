@@ -15,7 +15,7 @@ export default function HomePage() {
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight mb-6">
             품격 있는 라이프스타일,<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-300">
-              CommerceHub
+              aramdream store
             </span>에서 만나보세요
           </h1>
           <p className="text-slate-300 text-base sm:text-lg mb-8 leading-relaxed">

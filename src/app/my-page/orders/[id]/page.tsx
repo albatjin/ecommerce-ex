@@ -15,7 +15,7 @@ import { getOrderAction } from '@/app/actions/order.actions';
 import { OrderDetailViewer } from '@/components/user';
 
 export const metadata: Metadata = {
-  title: '주문 상세 조회 | 마이페이지 | CommerceHub',
+  title: '주문 상세 조회 | 마이페이지 | aramdream store',
   description: '주문 상세 품목, 결제 내역 및 배송 추적 정보를 확인하세요.',
 };
 

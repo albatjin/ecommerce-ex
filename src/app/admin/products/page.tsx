@@ -7,7 +7,7 @@ import { DEFAULT_CATEGORIES } from '@/shared/data/defaultCategories';
 import { MOCK_PRODUCTS } from '@/shared/data/mockProducts';
 
 export const metadata: Metadata = {
-  title: '상품 통합 관리 (CMS) | CommerceHub Admin',
+  title: '상품 통합 관리 (CMS) | aramdream store Admin',
   description: '등록된 카탈로그 상품 조회, 신규 상품 등록 및 수정, 재고/가격/진열 상태 통제',
 };
 
