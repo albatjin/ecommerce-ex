@@ -98,5 +98,21 @@ describe('ProductMapper', () => {
     expect(insertData.additional_price).toBe(10000);
     expect(insertData.stock_quantity).toBe(10);
   });
+
+  it('toPersistence: categoryId가 비-UUID 문자열(bags)인 경우 유효한 UUID로 안전하게 변환한다', () => {
+    const rowWithSlug = { ...sampleProductRow, category_id: 'bags' };
+    const product = ProductMapper.toDomain(rowWithSlug);
+    const insertData = ProductMapper.toPersistence(product);
+
+    expect(insertData.category_id).toBe('a0000000-0000-4000-8000-000000000011');
+  });
+
+  it('toPersistence: categoryId가 임의의 비정상 문자열인 경우 PostgreSQL syntax error를 막기 위해 null로 변환한다', () => {
+    const rowWithInvalid = { ...sampleProductRow, category_id: 'totally-invalid-cat' };
+    const product = ProductMapper.toDomain(rowWithInvalid);
+    const insertData = ProductMapper.toPersistence(product);
+
+    expect(insertData.category_id).toBeNull();
+  });
 });
 

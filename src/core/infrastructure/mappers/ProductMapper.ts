@@ -4,6 +4,7 @@ import { Money } from '@/core/domain/catalog/value-objects/Money';
 import { Stock } from '@/core/domain/catalog/value-objects/Stock';
 import { Discount } from '@/core/domain/catalog/value-objects/Discount';
 import type { Database, Json } from '@/shared/types/database.types';
+import { resolveCategoryUuid } from '@/shared/data/defaultCategories';
 
 type ProductRow = Database['public']['Tables']['products']['Row'];
 type ProductInsert = Database['public']['Tables']['products']['Insert'];
@@ -110,7 +111,7 @@ export class ProductMapper {
       product_code: product.productCode,
       name_ko: product.nameKo,
       name_en: product.nameEn ?? null,
-      category_id: product.categoryId ?? null,
+      category_id: resolveCategoryUuid(product.categoryId),
       regular_price: product.regularPrice.amount,
       sale_price: product.salePrice.amount,
       discount_rate: product.discountRate,
@@ -140,7 +141,7 @@ export class ProductMapper {
       product_code: product.productCode,
       name_ko: product.nameKo,
       name_en: product.nameEn ?? null,
-      category_id: product.categoryId ?? null,
+      category_id: resolveCategoryUuid(product.categoryId),
       regular_price: product.regularPrice.amount,
       sale_price: product.salePrice.amount,
       discount_rate: product.discountRate,

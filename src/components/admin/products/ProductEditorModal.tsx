@@ -20,7 +20,12 @@ import {
 import type { ProductSummaryDTO } from '@/core/application/catalog/dtos/GetProductsDTO';
 import type { CategoryTreeNode } from '@/core/application/catalog/dtos/CategoryTreeDTO';
 import type { ProductStatus, ProductTaxType } from '@/shared/types/database.types';
-import { flattenCategoryTree, DEFAULT_CATEGORIES } from '@/shared/data/defaultCategories';
+import {
+  flattenCategoryTree,
+  resolveCategoryUuid,
+  UUID_REGEX,
+  DEFAULT_CATEGORIES,
+} from '@/shared/data/defaultCategories';
 
 interface ProductEditorModalProps {
   isOpen: boolean;
@@ -102,12 +107,16 @@ export function ProductEditorModal({
     }
 
     startTransition(async () => {
+      const sanitizedCategoryId =
+        resolveCategoryUuid(categoryId) ||
+        (UUID_REGEX.test(categoryId) ? categoryId : null);
+
       if (isEditMode && product) {
         const result = await updateProductAction({
           id: product.id,
           nameKo: nameKo.trim(),
           nameEn: nameEn.trim() || null,
-          categoryId: categoryId || null,
+          categoryId: sanitizedCategoryId,
           regularPrice,
           salePrice,
           stockQuantity,
@@ -128,7 +137,7 @@ export function ProductEditorModal({
         const result = await createProductAction({
           nameKo: nameKo.trim(),
           nameEn: nameEn.trim() || null,
-          categoryId: categoryId || null,
+          categoryId: sanitizedCategoryId,
           regularPrice,
           salePrice,
           stockQuantity,
@@ -221,7 +230,7 @@ export function ProductEditorModal({
                 </label>
                 <select
                   id="modal-category"
-                  value={categoryId}
+                  value={resolveCategoryUuid(categoryId) || categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-indigo-500 focus:outline-none"
                 >
@@ -231,7 +240,12 @@ export function ProductEditorModal({
                       {cat.displayName}
                     </option>
                   ))}
-                  {Boolean(categoryId && !flatCategories.some((cat) => cat.id === categoryId)) && (
+                  {Boolean(
+                    categoryId &&
+                      !flatCategories.some(
+                        (cat) => cat.id === (resolveCategoryUuid(categoryId) || categoryId)
+                      )
+                  ) && (
                     <option value={categoryId}>기타 카테고리 ({categoryId})</option>
                   )}
                 </select>
