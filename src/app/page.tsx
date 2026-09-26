@@ -1,7 +1,14 @@
 import Link from 'next/link';
 import { ArrowRight, Sparkles, Truck, ShieldCheck, Clock, CreditCard } from 'lucide-react';
+import { ProductCard } from '@/components/catalog';
+import { getProductsAction } from '@/app/actions/catalog.actions';
+import { MOCK_PRODUCTS } from '@/shared/data/mockProducts';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const productsResult = await getProductsAction({ limit: 8, sortBy: 'created_at' });
+  const dbProducts =
+    productsResult.success && productsResult.data?.products ? productsResult.data.products : [];
+  const displayProducts = dbProducts.length > 0 ? dbProducts : MOCK_PRODUCTS.slice(0, 8);
   return (
     <div className="flex flex-col gap-12 pb-16">
       {/* 1. 히어로 프로모션 배너 */}
@@ -109,6 +116,36 @@ export default function HomePage() {
               </div>
               <div className="text-xs text-slate-500 mt-1">{cat.desc}</div>
             </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. 신규 등록 & 추천 셀렉션 */}
+      <section className="container-custom">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 mb-1">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>NEW & FEATURED</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              신상품 & 추천 셀렉션
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              aramdream store가 엄선한 최신 트렌드 아이템을 만나보세요.
+            </p>
+          </div>
+          <Link
+            href="/products"
+            className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1 self-start sm:self-auto"
+          >
+            전체 상품 보러가기 →
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {displayProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </section>

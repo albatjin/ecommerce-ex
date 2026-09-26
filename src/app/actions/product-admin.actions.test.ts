@@ -5,6 +5,7 @@ import {
   updateProductAction,
   toggleProductStatusAction,
   deleteProductAction,
+  seedMockProductsAction,
 } from './product-admin.actions';
 
 // Mocks
@@ -22,11 +23,26 @@ const mockGetUser = vi.fn().mockResolvedValue({
   },
 });
 
+const createChainableMock = () => {
+  const chain: Record<string, unknown> = {};
+  chain.select = vi.fn().mockReturnValue(chain);
+  chain.eq = vi.fn().mockReturnValue(chain);
+  chain.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+  chain.single = vi.fn().mockResolvedValue({ data: { id: 'p-1' }, error: null });
+  chain.upsert = vi.fn().mockResolvedValue({ error: null });
+  chain.insert = vi.fn().mockReturnValue(chain);
+  chain.update = vi.fn().mockReturnValue(chain);
+  chain.then = (resolve: (val: unknown) => unknown) =>
+    Promise.resolve({ data: { id: 'p-1' }, error: null }).then(resolve);
+  return chain;
+};
+
 vi.mock('@/core/infrastructure/supabase/server', () => ({
   getServerClient: vi.fn().mockResolvedValue({
     auth: {
       getUser: () => mockGetUser(),
     },
+    from: vi.fn().mockImplementation(() => createChainableMock()),
     storage: {
       from: vi.fn().mockReturnValue({
         upload: vi.fn().mockResolvedValue({ error: null }),
@@ -153,6 +169,30 @@ describe('Product Admin Server Actions', () => {
       const result = await deleteProductAction('prod-101');
       expect(result.success).toBe(true);
       expect(mockDelete).toHaveBeenCalledWith('prod-101');
+    });
+  });
+
+  describe('seedMockProductsAction', () => {
+    it('관리자 권한으로 샘플 데이터를 성공적으로 시딩한다', async () => {
+      const result = await seedMockProductsAction();
+      expect(result.success).toBe(true);
+      expect(result.data?.count).toBeGreaterThan(0);
+    });
+
+    it('관리자가 아닌 경우 시딩을 거부한다', async () => {
+      mockGetUser.mockResolvedValueOnce({
+        data: {
+          user: {
+            id: 'cust-1',
+            email: 'buyer@test.com',
+            user_metadata: { role: 'customer' },
+          },
+        },
+      });
+
+      const result = await seedMockProductsAction();
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('관리자 권한');
     });
   });
 });

@@ -13,10 +13,12 @@ import {
   EyeOff,
   Image as ImageIcon,
   RotateCw,
+  Database,
 } from 'lucide-react';
 import {
   toggleProductStatusAction,
   deleteProductAction,
+  seedMockProductsAction,
 } from '@/app/actions/product-admin.actions';
 import { ProductEditorModal } from './ProductEditorModal';
 import type {
@@ -154,6 +156,28 @@ export function AdminProductListViewer({
     });
   };
 
+  const handleSeedProducts = () => {
+    if (!window.confirm('기존 샘플 상품 12종과 표준 카테고리를 Supabase DB에 일괄 등록(시딩)하시겠습니까?')) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await seedMockProductsAction();
+      if (result.success && result.data) {
+        setFeedback({
+          type: 'success',
+          text: `샘플 상품 ${result.data.count}종이 DB에 성공적으로 등록되었습니다. 페이지를 새로고침합니다.`,
+        });
+        window.location.reload();
+      } else {
+        setFeedback({
+          type: 'error',
+          text: result.error || '샘플 데이터 등록 실패',
+        });
+      }
+    });
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* 1. 상단 타이틀 & 등록 액션 */}
@@ -168,15 +192,48 @@ export function AdminProductListViewer({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenCreateModal}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>신규 상품 등록</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={handleSeedProducts}
+            disabled={isPending}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:text-indigo-300 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 border border-indigo-200 dark:border-indigo-800 transition-all cursor-pointer disabled:opacity-50"
+            title="샘플 상품 12종 및 표준 카테고리를 DB에 일괄 등록합니다"
+          >
+            <Database className="w-4 h-4" />
+            <span>{isPending ? '시딩 등록 중...' : '샘플 상품 일괄 등록 (12개)'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOpenCreateModal}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>신규 상품 등록</span>
+          </button>
+        </div>
       </div>
+
+      {/* 안내 배너: 등록된 상품이 1개 이하일 때 */}
+      {products.length <= 1 && (
+        <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 text-indigo-900 dark:text-indigo-200 text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <span className="font-bold">💡 현재 등록된 상품이 {products.length}개입니다.</span>
+            <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-0.5">
+              쇼핑몰 전체 카탈로그를 풍성하게 채우고 싶으시다면 [샘플 상품 일괄 등록] 버튼을 눌러주세요.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleSeedProducts}
+            disabled={isPending}
+            className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shrink-0 cursor-pointer disabled:opacity-50"
+          >
+            지금 12개 샘플 상품 채우기
+          </button>
+        </div>
+      )}
 
       {/* 2. 상태별 카운트 요약 카드 */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">

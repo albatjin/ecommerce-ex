@@ -17,6 +17,12 @@ import {
   type ToggleProductStatusDTO,
 } from '@/core/application/catalog';
 import { checkIsAdmin } from '@/shared/utils/admin';
+import {
+  DEFAULT_CATEGORIES,
+  flattenCategoryTree,
+  resolveCategoryUuid,
+} from '@/shared/data/defaultCategories';
+import { MOCK_PRODUCTS } from '@/shared/data/mockProducts';
 
 export interface AdminProductActionResult<T> {
   success: boolean;
@@ -277,3 +283,132 @@ export async function uploadProductImageAction(
     };
   }
 }
+
+/**
+ * 관리자 샘플 데이터(기본 카테고리 18개 + 샘플 상품 12개 및 옵션) 일괄 시딩 Server Action
+ */
+export async function seedMockProductsAction(): Promise<AdminProductActionResult<{ count: number }>> {
+  try {
+    const { supabase } = await verifyAdminAuth();
+
+    // 1. 기본 카테고리 전체 시딩 (depth 순차 처리)
+    const flat = flattenCategoryTree(DEFAULT_CATEGORIES);
+    for (const d of [1, 2, 3]) {
+      const nodes = flat.filter((n) => n.depth === d);
+      for (const node of nodes) {
+        await supabase.from('categories').upsert(
+          {
+            id: node.id,
+            name: node.name,
+            slug: node.slug,
+            depth: node.depth,
+            parent_id: node.parentId,
+            sort_order: 1,
+            is_active: true,
+          },
+          { onConflict: 'slug' }
+        );
+      }
+    }
+
+    // 2. MOCK_PRODUCTS 12개 상품 일괄 시딩
+    let count = 0;
+    for (const mock of MOCK_PRODUCTS) {
+      const categoryUuid = resolveCategoryUuid(mock.categoryId, DEFAULT_CATEGORIES);
+
+      const productPayload = {
+        product_code: mock.productCode,
+        name_ko: mock.nameKo,
+        name_en: mock.nameEn || null,
+        category_id: categoryUuid || null,
+        regular_price: mock.regularPrice,
+        sale_price: mock.salePrice,
+        discount_rate: mock.discountRate,
+        tax_type: (mock.taxType || 'TAXABLE') as 'TAXABLE' | 'TAX_EXEMPT',
+        stock_quantity: mock.stockQuantity,
+        status: (mock.status || 'ACTIVE') as 'ACTIVE' | 'OUT_OF_STOCK' | 'HIDDEN' | 'DRAFT',
+        brand_name: mock.brandName || null,
+        description: mock.description || null,
+        cover_image_url: mock.coverImageUrl || null,
+        additional_images: mock.additionalImages || [],
+        shipping_fee: mock.shippingFee || 0,
+      };
+
+      const { data: existing } = await supabase
+        .from('products')
+        .select('id')
+        .eq('product_code', mock.productCode)
+        .maybeSingle();
+
+      let productId: string;
+      if (existing) {
+        const { data } = await supabase
+          .from('products')
+          .update(productPayload)
+          .eq('id', existing.id)
+          .select('id')
+          .single();
+        if (data) productId = data.id;
+        else continue;
+      } else {
+        const { data } = await supabase
+          .from('products')
+          .insert(productPayload)
+          .select('id')
+          .single();
+        if (data) productId = data.id;
+        else continue;
+      }
+
+      count++;
+
+      // 3. 상품별 옵션(Variants) 시딩
+      if (mock.variants && mock.variants.length > 0) {
+        for (const v of mock.variants) {
+          const variantPayload = {
+            product_id: productId,
+            sku_code: v.skuCode,
+            variant_name: v.variantName,
+            options: v.options || {},
+            additional_price: v.additionalPrice || 0,
+            stock_quantity: v.stockQuantity || 0,
+            status: (v.status || 'ACTIVE') as 'ACTIVE' | 'LOW_STOCK' | 'OUT_OF_STOCK',
+          };
+
+          const { data: existingVariant } = await supabase
+            .from('product_variants')
+            .select('id')
+            .eq('product_id', productId)
+            .eq('sku_code', v.skuCode)
+            .maybeSingle();
+
+          if (existingVariant) {
+            await supabase
+              .from('product_variants')
+              .update(variantPayload)
+              .eq('id', existingVariant.id);
+          } else {
+            await supabase
+              .from('product_variants')
+              .insert(variantPayload);
+          }
+        }
+      }
+    }
+
+    revalidatePath('/admin/products');
+    revalidatePath('/products');
+    revalidatePath('/', 'layout');
+
+    return {
+      success: true,
+      data: { count },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '샘플 데이터 등록 실패',
+    };
+  }
+}
+
