@@ -136,13 +136,24 @@ export function PayPalCheckoutModal({
             onError: (err: unknown) => {
               console.error('PayPal Buttons Error:', err);
               if (isMounted) {
-                setError('PayPal 결제 진행 중 오류가 발생했습니다. 다시 시도해 주세요.');
+                const errorStr = (err instanceof Error ? err.message : String(err)) || '';
+                if (
+                  errorStr.includes('Window closed') ||
+                  errorStr.includes('closed') ||
+                  errorStr.includes('popup_close')
+                ) {
+                  setError(
+                    'PayPal 결제창이 응답 전 닫혔습니다. (창을 닫으셨거나, Sandbox 환경에서 실제 개인 계정으로 로그인을 시도한 경우 발생합니다. Sandbox 테스트 계정으로 로그인하시거나 아래 [원클릭 테스트 시뮬레이션]으로 진행하실 수 있습니다.)'
+                  );
+                } else {
+                  setError('PayPal 결제 진행 중 오류가 발생했습니다. 다시 시도해 주세요.');
+                }
                 setIsProcessing(false);
               }
             },
             onCancel: () => {
               if (isMounted) {
-                setError('PayPal 결제가 취소되었습니다.');
+                setError('PayPal 결제 창이 취소되었습니다. 다시 시도하거나 간편 테스트 시뮬레이션을 이용해 주세요.');
                 setIsProcessing(false);
               }
             },
@@ -297,27 +308,45 @@ export function PayPalCheckoutModal({
             </div>
           </div>
 
-          {/* 연동 모드 안내 배지 */}
-          <div className="p-3 rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/30 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
-                <CreditCard className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-extrabold text-slate-900 dark:text-white">
-                    PayPal 공식 연동 활성화
-                  </span>
-                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/60 px-1.5 py-0.5 rounded">
-                    Sandbox 모드
-                  </span>
+          {/* 연동 모드 안내 배지 & 샌드박스 계정 안내 */}
+          <div className="p-3.5 rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/30 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  <CreditCard className="w-4 h-4" />
                 </div>
-                <span className="text-[11px] text-slate-500">
-                  팝업 창에서 본인 또는 Sandbox 테스트 계정으로 로그인해 승인하세요.
-                </span>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-black text-slate-900 dark:text-white">
+                      PayPal 공식 연동 활성화
+                    </span>
+                    <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+                      Sandbox 모드
+                    </span>
+                  </div>
+                </div>
               </div>
+              <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
             </div>
-            <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
+
+            <div className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300 bg-white/70 dark:bg-slate-900/60 p-2.5 rounded-xl border border-blue-100 dark:border-blue-900/40">
+              <p className="font-semibold text-blue-800 dark:text-blue-300 mb-0.5">
+                💡 Sandbox 팝업 로그인 안내
+              </p>
+              <p>
+                현재는 <strong>Sandbox 개발 테스트 환경</strong>입니다. 실제 개인 PayPal 계정이 아닌,{' '}
+                <a
+                  href="https://developer.paypal.com/dashboard/accounts"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 dark:text-blue-400 underline font-medium inline-flex items-center gap-0.5"
+                >
+                  developer.paypal.com
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </a>
+                의 <strong>Testing Tools &gt; Sandbox Accounts</strong>에 등록된 <em>Personal 구매자 계정</em>(예: <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[10px]">sb-xxxx@personal.example.com</code>)으로 로그인하셔야 승인됩니다. (실제 계정 입력 시 창이 닫힐 수 있습니다.)
+              </p>
+            </div>
           </div>
 
           {/* 배송지 확인 */}
@@ -366,6 +395,26 @@ export function PayPalCheckoutModal({
                     <span className="font-black italic text-[#003087] tracking-tight">PayPal</span>
                     <span>(${amountUSD.toFixed(2)} USD)</span>
                   </button>
+                )}
+
+                {/* SDK 로드 완료 후에도 계정 입력 없이 바로 테스트할 수 있는 원클릭 옵션 */}
+                {isSdkLoaded && !isSdkLoading && (
+                  <div className="space-y-2 pt-1">
+                    <div className="relative flex py-1 items-center">
+                      <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                      <span className="flex-shrink mx-3 text-[11px] text-slate-400 font-medium">또는 간편 승인 테스트</span>
+                      <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isProcessing || isSuccess}
+                      onClick={handleConfirmPayment}
+                      className="w-full py-3 px-4 rounded-xl border border-dashed border-amber-400 dark:border-amber-600 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/60 dark:hover:bg-amber-900/30 text-amber-900 dark:text-amber-200 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span>Sandbox 로그인 없이 원클릭 시뮬레이션으로 즉시 결제 승인</span>
+                    </button>
+                  </div>
                 )}
               </>
             )}
